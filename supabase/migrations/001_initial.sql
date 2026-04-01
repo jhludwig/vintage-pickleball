@@ -52,6 +52,7 @@ create table round_participants (
 alter table round_participants enable row level security;
 create policy "public read" on round_participants for select using (true);
 create policy "auth insert" on round_participants for insert with check (auth.uid() is not null);
+create policy "auth update" on round_participants for update using (auth.uid() is not null);
 create policy "auth delete" on round_participants for delete using (auth.uid() is not null);
 
 -- active_courts (8 rows created per round)
