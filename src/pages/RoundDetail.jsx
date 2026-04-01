@@ -25,6 +25,8 @@ export default function RoundDetail() {
   const [options, setOptions] = useState({})
   const [swapTarget, setSwapTarget] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [priorRounds, setPriorRounds] = useState([])
+  const [priorRoundResult, setPriorRoundResult] = useState(null)
 
   const load = useCallback(async () => {
     const [
@@ -35,6 +37,7 @@ export default function RoundDetail() {
       { data: parts },
       { data: assignments },
       { data: res },
+      { data: priorRoundRows },
     ] = await Promise.all([
       supabase.from('rounds').select('*').eq('id', roundId).single(),
       supabase.from('events').select('*').eq('id', eventId).single(),
@@ -43,6 +46,7 @@ export default function RoundDetail() {
       supabase.from('round_participants').select('player_id').eq('round_id', roundId),
       supabase.from('court_assignments').select('*, players(*)').eq('round_id', roundId),
       supabase.from('court_results').select('*').eq('round_id', roundId),
+      supabase.from('rounds').select('id, round_number').eq('event_id', eventId).eq('is_committed', true).neq('id', roundId).order('round_number'),
     ])
 
     setRound(rd)
@@ -65,6 +69,51 @@ export default function RoundDetail() {
       }
     }
     setCommittedAssignments(committed)
+
+    // Build prior rounds data for social priority and river mode
+    const priorRoundIds = (priorRoundRows ?? []).map(r => r.id)
+    if (priorRoundIds.length > 0) {
+      const { data: priorAsn } = await supabase
+        .from('court_assignments')
+        .select('round_id, court_number, player_id, team, players(*)')
+        .in('round_id', priorRoundIds)
+
+      // priorRounds: shape for social priority - player IDs per court
+      const built = priorRoundIds.map(rid => {
+        const roundAsn = (priorAsn ?? []).filter(a => a.round_id === rid)
+        const courtNums = [...new Set(roundAsn.map(a => a.court_number))].sort((a, b) => a - b)
+        return {
+          assignments: courtNums.map(cn => ({
+            court_number: cn,
+            players: roundAsn.filter(a => a.court_number === cn).map(a => a.player_id),
+          })),
+        }
+      })
+      setPriorRounds(built)
+
+      // priorRoundResult: most recent committed round with results, for river mode
+      const latestId = priorRoundIds[priorRoundIds.length - 1]
+      const { data: prevResults } = await supabase
+        .from('court_results').select('*').eq('round_id', latestId)
+      if (prevResults && prevResults.length > 0) {
+        const latestAsn = (priorAsn ?? []).filter(a => a.round_id === latestId)
+        const resultMap = {}
+        for (const result of prevResults) {
+          const courtPlayers = latestAsn.filter(a => a.court_number === result.court_number)
+          resultMap[result.court_number] = {
+            winners: courtPlayers.filter(a => a.team === result.winning_team).map(a => a.players),
+            losers: courtPlayers.filter(a => a.team !== result.winning_team).map(a => a.players),
+          }
+        }
+        setPriorRoundResult(resultMap)
+      } else {
+        setPriorRoundResult(null)
+      }
+    } else {
+      setPriorRounds([])
+      setPriorRoundResult(null)
+    }
+
     setLoading(false)
   }, [roundId, eventId])
 
@@ -95,7 +144,7 @@ export default function RoundDetail() {
   function handleSuggest() {
     const activeCourts = courts.filter(c => c.is_active).map(c => c.court_number)
     const participatingPlayers = allPlayers.filter(p => participants.has(p.id))
-    const draft = suggest({ participants: participatingPlayers, activeCourts, options })
+    const draft = suggest({ participants: participatingPlayers, activeCourts, options, priorRounds, priorRoundResult })
     setDraftAssignments(draft)
     setSwapTarget(null)
   }
@@ -116,6 +165,22 @@ export default function RoundDetail() {
       team1: court.team1.map(p => p.id === swapTarget.id ? player : p.id === player.id ? swapTarget : p),
       team2: court.team2.map(p => p.id === swapTarget.id ? player : p.id === player.id ? swapTarget : p),
     })))
+    setSwapTarget(null)
+  }
+
+  function handleMoveToOtherTeam() {
+    if (!swapTarget) return
+    setDraftAssignments(prev => prev.map(court => {
+      const inTeam1 = court.team1.some(p => p.id === swapTarget.id)
+      const inTeam2 = court.team2.some(p => p.id === swapTarget.id)
+      if (inTeam1) {
+        return { ...court, team1: court.team1.filter(p => p.id !== swapTarget.id), team2: [...court.team2, swapTarget] }
+      }
+      if (inTeam2) {
+        return { ...court, team2: court.team2.filter(p => p.id !== swapTarget.id), team1: [...court.team1, swapTarget] }
+      }
+      return court
+    }))
     setSwapTarget(null)
   }
 
@@ -191,8 +256,16 @@ export default function RoundDetail() {
       </div>
 
       {swapTarget && (
-        <div className="fixed bottom-16 left-0 right-0 bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
-          Tap another player to swap with <strong>{swapTarget.name}</strong>. Tap same player to cancel.
+        <div className="fixed bottom-16 left-0 right-0 bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-sm text-yellow-800">
+          <div className="flex items-center justify-between gap-2">
+            <span>Selected: <strong>{swapTarget.name}</strong>. Tap another player to swap, or tap same to cancel.</span>
+            <button
+              onClick={handleMoveToOtherTeam}
+              className="shrink-0 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 rounded text-xs font-medium"
+            >
+              Move to other team
+            </button>
+          </div>
         </div>
       )}
     </div>
