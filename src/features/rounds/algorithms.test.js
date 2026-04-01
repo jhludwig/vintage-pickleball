@@ -105,6 +105,54 @@ describe('suggest — mixed priority', () => {
   })
 })
 
+describe('suggest — gender priority', () => {
+  it('groups same-gender players on the same court when pools are clean', () => {
+    const males = Array.from({ length: 4 }, (_, i) => makePlayer(`m${i}`, `M${i}`, 'member', '3.5', 'M'))
+    const females = Array.from({ length: 4 }, (_, i) => makePlayer(`f${i}`, `F${i}`, 'member', '3.5', 'F'))
+    const result = suggest({
+      participants: [...males, ...females],
+      activeCourts: [1, 2],
+      options: { genderPriority: true },
+    })
+    // Each court should have all-male or all-female
+    result.forEach(court => {
+      const courtPlayers = [...court.team1, ...court.team2]
+      const genders = new Set(courtPlayers.map(p => p.gender))
+      expect(genders.size).toBe(1)
+    })
+  })
+})
+
+describe('suggest — social priority', () => {
+  it('avoids pairing players who played together in a prior round', () => {
+    // 8 players: prior round had p0+p1+p2+p3 on court 1, p4+p5+p6+p7 on court 2
+    const players = Array.from({ length: 8 }, (_, i) => makePlayer(`p${i}`, `P${i}`, 'member', '3.5'))
+    const priorRounds = [
+      {
+        assignments: [
+          { court_number: 1, players: ['p0', 'p1', 'p2', 'p3'] },
+          { court_number: 2, players: ['p4', 'p5', 'p6', 'p7'] },
+        ],
+      },
+    ]
+    const result = suggest({
+      participants: players,
+      activeCourts: [1, 2],
+      options: { socialPriority: true },
+      priorRounds,
+    })
+    // Each court should mix players from different prior groups
+    result.forEach(court => {
+      const courtIds = [...court.team1, ...court.team2].map(p => p.id)
+      const fromGroup1 = courtIds.filter(id => ['p0','p1','p2','p3'].includes(id))
+      const fromGroup2 = courtIds.filter(id => ['p4','p5','p6','p7'].includes(id))
+      // Both groups should be represented on each court (no purely same-group court)
+      expect(fromGroup1.length).toBeGreaterThan(0)
+      expect(fromGroup2.length).toBeGreaterThan(0)
+    })
+  })
+})
+
 describe('suggest — river mode', () => {
   it('keeps court 1 winners on court 1', () => {
     const w1 = makePlayer('w1', 'W1', 'member', '4.5')

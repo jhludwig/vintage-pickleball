@@ -42,7 +42,9 @@ function makeCourt(courtNumber, four) {
  * @param {object[]} input.participants - checked players for this round
  * @param {number[]} input.activeCourts - e.g. [1,2,3]
  * @param {object} input.options - { memberPriority, genderPriority, rankPriority, socialPriority, mixedPriority, riverMode }
- * @param {object[]} [input.priorRounds] - committed rounds in current event, each with court_assignments
+ * @param {object[]} [input.priorRounds] - Committed rounds in the current event.
+ *   Shape: [{ assignments: [{ court_number: number, players: string[] }] }]
+ *   where players is an array of player ID strings.
  * @param {object} [input.priorRoundResult] - { [courtNum]: { winners: Player[], losers: Player[] } }
  * @returns {{ court_number: number, team1: object[], team2: object[] }[]}
  */
@@ -168,6 +170,7 @@ function socialPriorityArrange(selected, numCourts, priorRounds) {
   for (const round of priorRounds) {
     for (const assignment of (round.assignments ?? [])) {
       const courtPlayers = assignment.players ?? []
+      // courtPlayers contains player ID strings (not objects)
       for (let i = 0; i < courtPlayers.length; i++) {
         for (let j = i + 1; j < courtPlayers.length; j++) {
           const k = key(courtPlayers[i], courtPlayers[j])
