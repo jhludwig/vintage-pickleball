@@ -19,12 +19,24 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
-    const [{ data: ev }, { data: rds }, { data: results }] = await Promise.all([
+    const [{ data: ev, error: evError }, { data: rds, error: rdsError }] = await Promise.all([
       supabase.from('events').select('*').eq('id', eventId).single(),
       supabase.from('rounds').select('*').eq('event_id', eventId).order('round_number'),
-      supabase.from('court_results').select('round_id'),
     ])
-    const resultRoundIds = new Set((results ?? []).map(r => r.round_id))
+    if (evError) { console.error('Failed to load event:', evError) }
+    if (rdsError) { console.error('Failed to load rounds:', rdsError) }
+
+    const roundIds = (rds ?? []).map(r => r.id)
+    let resultRoundIds = new Set()
+    if (roundIds.length > 0) {
+      const { data: results, error: resError } = await supabase
+        .from('court_results')
+        .select('round_id')
+        .in('round_id', roundIds)
+      if (resError) { console.error('Failed to load results:', resError) }
+      resultRoundIds = new Set((results ?? []).map(r => r.round_id))
+    }
+
     setEvent(ev)
     setRounds((rds ?? []).map(r => ({ ...r, hasResults: resultRoundIds.has(r.id) })))
     setLoading(false)
@@ -33,7 +45,7 @@ export default function EventDetail() {
   useEffect(() => { load() }, [load])
 
   async function addRound() {
-    const nextNum = rounds.length + 1
+    const nextNum = rounds.length > 0 ? Math.max(...rounds.map(r => r.round_number)) + 1 : 1
     const { data: round, error } = await supabase
       .from('rounds')
       .insert({ event_id: eventId, round_number: nextNum })
