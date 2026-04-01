@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import PlayerTable from '../features/players/PlayerTable'
@@ -11,26 +11,31 @@ export default function Players() {
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null) // null | 'add' | player object
 
-  useEffect(() => { loadPlayers() }, [])
-
-  async function loadPlayers() {
-    const { data } = await supabase.from('players').select('*').order('name')
+  const loadPlayers = useCallback(async () => {
+    const { data, error } = await supabase.from('players').select('*').order('name')
+    if (error) { console.error('Failed to load players:', error) }
     setPlayers(data ?? [])
     setLoading(false)
-  }
+  }, [])
+
+  useEffect(() => { loadPlayers() }, [loadPlayers])
 
   async function handleSave(form) {
-    if (form.id) {
-      await supabase.from('players').update(form).eq('id', form.id)
+    const { id, created_at, ...fields } = form
+    let error
+    if (id) {
+      ({ error } = await supabase.from('players').update(fields).eq('id', id))
     } else {
-      await supabase.from('players').insert(form)
+      ({ error } = await supabase.from('players').insert(fields))
     }
+    if (error) { alert(`Failed to save: ${error.message}`); return }
     setModal(null)
     loadPlayers()
   }
 
   async function handleDelete(id) {
-    await supabase.from('players').delete().eq('id', id)
+    const { error } = await supabase.from('players').delete().eq('id', id)
+    if (error) { alert(`Failed to delete: ${error.message}`); return }
     setModal(null)
     loadPlayers()
   }

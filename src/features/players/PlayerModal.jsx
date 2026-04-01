@@ -15,8 +15,11 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
   async function handleSave() {
     if (!form.name.trim()) return
     setSaving(true)
-    await onSave(form)
-    setSaving(false)
+    try {
+      await onSave(form)
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete() {
