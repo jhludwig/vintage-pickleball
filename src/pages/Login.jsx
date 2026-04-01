@@ -28,8 +28,9 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-center mb-6">Vintage Club</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -38,8 +39,9 @@ export default function Login() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -47,7 +49,7 @@ export default function Login() {
               className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p role="alert" className="text-red-500 text-sm">{error}</p>}
           <button
             type="submit"
             disabled={loading}
