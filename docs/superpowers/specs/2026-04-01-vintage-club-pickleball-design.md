@@ -154,7 +154,7 @@ All checkboxes are independent and combinable. When multiple are checked, priori
 | Member Priority | Fill courts with members before guests. Pros excluded from algorithm. |
 | Gender Priority | Assign each court to one gender where possible; overflow fills remaining spots. |
 | Rank Priority | Sort by ranking (float), assign best-ranked players to Court 1 descending. |
-| Social Priority | Build co-play matrix from committed rounds in the **current event only**. Minimize repeat pairings. |
+| Social Priority | Build co-play matrix from committed rounds in the **current event only**. "Played together" means sharing the same court (regardless of team). Minimize the number of repeat court-sharings across the new assignment. |
 | Mixed Priority | Divide courts into top (1–3), mid (4–6), bottom (7–8) tiers by rank. Shuffle randomly within each tier. |
 | River Mode | Requires prior committed round with results. Winners move up one court and split teams; losers move down and split. Court 1 winners stay; lowest court losers stay. |
 
@@ -166,7 +166,8 @@ All checkboxes are independent and combinable. When multiple are checked, priori
    - **Swap**: Tap any assigned player → "swap with..." picker listing all other assigned players.
    - **Move to other team**: Tap a player within a court → button to move them to the other team on the same court.
 4. Click **Suggest** again → discards current draft and generates a new one with same settings.
-5. Click **Commit Round** → assignments are saved to `court_assignments`, round `is_committed` set to true. Winners can be noted afterward via the round detail view.
+5. Click **Commit Round** → assignments are saved to `court_assignments`, round `is_committed` set to true.
+6. **Recording results**: After committing, each court card shows a "Record Winner" control — a toggle between Team A and Team B. Selecting a winner writes to `court_results`. Results can be updated at any time after commit.
 
 ---
 
