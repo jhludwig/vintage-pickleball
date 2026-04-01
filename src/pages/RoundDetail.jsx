@@ -73,12 +73,13 @@ export default function RoundDetail() {
   async function handleParticipantChange(newSet) {
     setParticipants(newSet)
     if (!canWrite) return
-    // Sync to DB: delete all then reinsert
-    await supabase.from('round_participants').delete().eq('round_id', roundId)
+    const { error: delError } = await supabase.from('round_participants').delete().eq('round_id', roundId)
+    if (delError) { alert(`Failed to update participants: ${delError.message}`); return }
     if (newSet.size > 0) {
-      await supabase.from('round_participants').insert(
+      const { error: insError } = await supabase.from('round_participants').insert(
         [...newSet].map(pid => ({ round_id: roundId, player_id: pid }))
       )
+      if (insError) { alert(`Failed to update participants: ${insError.message}`); return }
     }
   }
 
@@ -191,7 +192,7 @@ export default function RoundDetail() {
 
       {swapTarget && (
         <div className="fixed bottom-16 left-0 right-0 bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
-          Tap another player to swap with <strong>{swapTarget.name}</strong>. Tap again to cancel.
+          Tap another player to swap with <strong>{swapTarget.name}</strong>. Tap same player to cancel.
         </div>
       )}
     </div>
