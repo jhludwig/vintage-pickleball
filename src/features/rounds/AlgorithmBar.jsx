@@ -1,13 +1,16 @@
-const CHECKBOXES = [
-  { key: 'memberPriority', label: 'Member Priority' },
-  { key: 'genderPriority', label: 'Gender Priority' },
-  { key: 'rankPriority', label: 'Rank Priority' },
-  { key: 'socialPriority', label: 'Social Priority' },
-  { key: 'mixedPriority', label: 'Mixed Priority' },
-  { key: 'riverMode', label: 'River Mode' },
+const EXCLUSIVE = [
+  { key: 'rankPriority', label: 'Ranking' },
+  { key: 'socialPriority', label: 'Social' },
+  { key: 'mixedPriority', label: 'Mixed' },
+  { key: 'riverMode', label: 'River' },
 ]
 
 export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCommit, isCommitted, canWrite }) {
+  function handleExclusive(key, checked) {
+    EXCLUSIVE.forEach(cb => onOptionChange(cb.key, false))
+    if (checked) onOptionChange(key, true)
+  }
+
   return (
     <div className="bg-blue-50 border-b border-blue-100 px-3 py-2 flex items-center gap-2 flex-wrap">
       {canWrite && (
@@ -18,18 +21,41 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           ✨ Suggest
         </button>
       )}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 flex-1 justify-center">
-        {CHECKBOXES.map(cb => (
+      <div className="flex items-center gap-3 flex-1 justify-center flex-wrap">
+        <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!options.memberPriority}
+            onChange={e => onOptionChange('memberPriority', e.target.checked)}
+          />
+          Member Priority
+        </label>
+
+        <div className="w-px h-4 bg-blue-200 shrink-0" />
+
+        {EXCLUSIVE.map(cb => (
           <label key={cb.key} className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
             <input
               type="checkbox"
               checked={!!options[cb.key]}
-              onChange={e => onOptionChange(cb.key, e.target.checked)}
+              onChange={e => handleExclusive(cb.key, e.target.checked)}
             />
             {cb.label}
           </label>
         ))}
+
+        <div className="w-px h-4 bg-blue-200 shrink-0" />
+
+        <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!options.genderPriority}
+            onChange={e => onOptionChange('genderPriority', e.target.checked)}
+          />
+          Gender Sorting
+        </label>
       </div>
+
       {canWrite && !isCommitted && (
         <>
           <div className="w-px h-6 bg-blue-200 shrink-0" />
