@@ -52,9 +52,8 @@ export default function EventDetail() {
       .select()
       .single()
     if (error) { alert(`Failed to add round: ${error.message}`); return }
-    // Create 8 inactive court rows
     const { error: courtsError } = await supabase.from('active_courts').insert(
-      Array.from({ length: 8 }, (_, i) => ({ round_id: round.id, court_number: i + 1, is_active: false }))
+      Array.from({ length: 8 }, (_, i) => ({ round_id: round.id, court_number: i + 1, is_active: true }))
     )
     if (courtsError) { console.error('Failed to create courts:', courtsError) }
     load()
