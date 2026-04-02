@@ -5,9 +5,9 @@ import { useAuth } from '../hooks/useAuth'
 import Spinner from '../components/Spinner'
 
 function roundStatus(round) {
-  if (!round.is_committed) return { label: 'Draft', color: 'text-gray-400' }
-  if (round.hasResults) return { label: 'Results recorded', color: 'text-green-600' }
-  return { label: 'Committed', color: 'text-blue-500' }
+  if (!round.is_committed) return { label: 'Draft', className: 'bg-stone-100 text-stone-400' }
+  if (round.hasResults) return { label: 'Results recorded', className: 'bg-emerald-50 text-emerald-600' }
+  return { label: 'Committed', className: 'bg-blue-50 text-blue-500' }
 }
 
 export default function EventDetail() {
@@ -68,51 +68,55 @@ export default function EventDetail() {
   }
 
   if (loading) return <Spinner />
-  if (!event) return <div className="p-4 text-gray-500">Event not found</div>
+  if (!event) return <div className="p-4 text-stone-500">Event not found</div>
 
   return (
-    <div>
-      <div className="px-4 py-3 border-b">
-        <button onClick={() => navigate('/events')} className="text-sm text-blue-500 mb-1">← Events</button>
-        <h2 className="text-lg font-bold">{event.name}</h2>
-        <p className="text-sm text-gray-500">{event.date}</p>
+    <div className="max-w-lg mx-auto">
+      <div className="px-4 pt-4 pb-3">
+        <button onClick={() => navigate('/events')} className="text-sm text-emerald-600 hover:text-emerald-700 mb-2 inline-flex items-center gap-1">
+          ← Events
+        </button>
+        <h2 className="text-xl font-bold text-stone-800">{event.name}</h2>
+        <p className="text-sm text-stone-400">{event.date}</p>
       </div>
 
-      <div className="p-4">
+      <div className="px-4 pb-4">
         {session && (
           <button
             onClick={addRound}
-            className="mb-4 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            className="mb-3 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
           >
             + Add Round
           </button>
         )}
-        <ul className="divide-y divide-gray-100 border rounded-lg overflow-hidden">
+        <ul className="divide-y divide-stone-100 bg-white rounded-xl shadow-sm overflow-hidden border border-stone-200">
           {rounds.map(r => {
             const status = roundStatus(r)
             return (
               <li
                 key={r.id}
                 onClick={() => navigate(`/events/${eventId}/rounds/${r.id}`)}
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                className="flex items-center justify-between px-4 py-3.5 hover:bg-stone-50 cursor-pointer transition-colors"
               >
                 <div>
-                  <div className="font-medium">Round {r.round_number}</div>
-                  <div className={`text-xs ${status.color}`}>{status.label}</div>
+                  <div className="font-semibold text-stone-800">Round {r.round_number}</div>
+                  <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium ${status.className}`}>
+                    {status.label}
+                  </span>
                 </div>
                 {session && (
                   <button
                     onClick={e => deleteRound(e, r.id)}
-                    className="text-red-400 hover:text-red-600 text-sm px-2"
+                    className="text-stone-300 hover:text-red-500 text-sm px-2 transition-colors"
                   >
-                    Delete
+                    ✕
                   </button>
                 )}
               </li>
             )
           })}
           {rounds.length === 0 && (
-            <li className="px-4 py-8 text-center text-gray-400 text-sm">No rounds yet</li>
+            <li className="px-4 py-10 text-center text-stone-400 text-sm">No rounds yet</li>
           )}
         </ul>
       </div>

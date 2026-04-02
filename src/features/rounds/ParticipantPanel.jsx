@@ -1,13 +1,12 @@
 export default function ParticipantPanel({ players, selected, onChange }) {
-  // players: all plays_pickleball players; selected: Set of player ids
   const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name))
 
   return (
-    <div className="w-36 shrink-0 border-r border-gray-200 p-2 overflow-y-auto">
-      <div className="text-xs font-bold uppercase text-gray-400 mb-2">Participants</div>
-      <div className="space-y-1">
+    <div className="w-36 shrink-0 border-r border-stone-200 bg-white p-2 overflow-y-auto">
+      <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-1">Participants</div>
+      <div className="space-y-0.5">
         {sorted.map(p => (
-          <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+          <label key={p.id} className="flex items-center gap-2 cursor-pointer px-1 py-1 rounded-lg hover:bg-stone-50 transition-colors">
             <input
               type="checkbox"
               checked={selected.has(p.id)}
@@ -16,11 +15,12 @@ export default function ParticipantPanel({ players, selected, onChange }) {
                 e.target.checked ? next.add(p.id) : next.delete(p.id)
                 onChange(next)
               }}
+              className="accent-emerald-600"
             />
-            <span className="text-xs truncate">
+            <span className="text-xs truncate text-stone-700">
               {p.name}
-              {p.ranking ? ` (${p.ranking})` : ''}
-              {p.player_type === 'guest' ? <span className="text-gray-400"> G</span> : null}
+              {p.ranking ? <span className="text-stone-400"> {p.ranking}</span> : ''}
+              {p.player_type === 'guest' ? <span className="text-stone-400"> G</span> : null}
             </span>
           </label>
         ))}

@@ -42,37 +42,39 @@ export default function PlayerTable({ players, onRowClick }) {
   const arrow = sortDir === 'asc' ? '↑' : '↓'
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            {COLS.map(c => (
-              <th
-                key={c.key}
-                onClick={() => handleSort(c.key)}
-                className="px-3 py-2 font-medium text-gray-600 cursor-pointer select-none whitespace-nowrap"
-              >
-                {c.label} {sortCol === c.key ? arrow : ''}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map(p => (
-            <tr
-              key={p.id}
-              onClick={() => onRowClick(p)}
-              className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-            >
-              <td className="px-3 py-2">{p.name}</td>
-              <td className="px-3 py-2 capitalize">{p.player_type}</td>
-              <td className="px-3 py-2">{p.gender}</td>
-              <td className="px-3 py-2">{p.ranking}</td>
-              <td className="px-3 py-2">{p.plays_pickleball ? '✓' : ''}</td>
+    <div className="mx-4 mt-3 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-stone-50 border-b border-stone-200">
+              {COLS.map(c => (
+                <th
+                  key={c.key}
+                  onClick={() => handleSort(c.key)}
+                  className="px-3 py-2.5 text-left font-semibold text-stone-500 text-xs uppercase tracking-wide cursor-pointer select-none whitespace-nowrap hover:text-stone-700 transition-colors"
+                >
+                  {c.label} {sortCol === c.key ? <span className="text-emerald-500">{arrow}</span> : ''}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-stone-100">
+            {sorted.map(p => (
+              <tr
+                key={p.id}
+                onClick={() => onRowClick(p)}
+                className="hover:bg-stone-50 cursor-pointer transition-colors"
+              >
+                <td className="px-3 py-2.5 font-medium text-stone-800">{p.name}</td>
+                <td className="px-3 py-2.5 capitalize text-stone-600">{p.player_type}</td>
+                <td className="px-3 py-2.5 text-stone-600">{p.gender}</td>
+                <td className="px-3 py-2.5 text-stone-600">{p.ranking}</td>
+                <td className="px-3 py-2.5 text-emerald-500">{p.plays_pickleball ? '✓' : ''}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

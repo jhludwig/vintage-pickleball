@@ -27,37 +27,32 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
     await onDelete(player.id)
   }
 
+  const inputClass = 'w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+  const labelClass = 'block text-sm font-medium text-stone-700 mb-1'
+
   return (
     <Modal title={isEdit ? 'Edit Player' : 'Add Player'} onClose={onClose}>
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <label className={labelClass}>Name</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm"
+            className={inputClass}
             value={form.name}
             onChange={e => set('name', e.target.value)}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-              value={form.player_type}
-              onChange={e => set('player_type', e.target.value)}
-            >
+            <label className={labelClass}>Type</label>
+            <select className={inputClass} value={form.player_type} onChange={e => set('player_type', e.target.value)}>
               <option value="member">Member</option>
               <option value="guest">Guest</option>
               <option value="pro">Pro</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-            <select
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-              value={form.gender}
-              onChange={e => set('gender', e.target.value)}
-            >
+            <label className={labelClass}>Gender</label>
+            <select className={inputClass} value={form.gender} onChange={e => set('gender', e.target.value)}>
               <option value="">—</option>
               <option value="M">M</option>
               <option value="F">F</option>
@@ -66,19 +61,20 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ranking</label>
+          <label className={labelClass}>Ranking</label>
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm"
+            className={inputClass}
             value={form.ranking}
             onChange={e => set('ranking', e.target.value)}
             placeholder="e.g. 3.5"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
           <input
             type="checkbox"
             checked={form.plays_pickleball}
             onChange={e => set('plays_pickleball', e.target.checked)}
+            className="accent-emerald-600"
           />
           Plays pickleball
         </label>
@@ -86,14 +82,14 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50"
+            className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
           {isEdit && (
             <button
               onClick={handleDelete}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-red-500 border border-red-200 hover:bg-red-50"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-red-500 border border-red-200 hover:bg-red-50 transition-colors"
             >
               Delete
             </button>

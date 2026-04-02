@@ -39,40 +39,40 @@ export default function Events() {
   if (loading) return <Spinner />
 
   return (
-    <div>
+    <div className="max-w-lg mx-auto">
       {session && (
-        <div className="p-4 pb-0 flex justify-end">
+        <div className="px-4 pt-4 flex justify-end">
           <button
             onClick={() => setShowModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
           >
             + Add Event
           </button>
         </div>
       )}
-      <ul className="divide-y divide-gray-100 mt-2">
+      <ul className="divide-y divide-stone-100 mt-3 mx-4 bg-white rounded-xl shadow-sm overflow-hidden border border-stone-200">
         {events.map(ev => (
           <li
             key={ev.id}
             onClick={() => navigate(`/events/${ev.id}`)}
-            className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer"
+            className="flex items-center justify-between px-4 py-3.5 hover:bg-stone-50 cursor-pointer transition-colors"
           >
             <div>
-              <div className="font-medium text-gray-800">{ev.name}</div>
-              <div className="text-sm text-gray-500">{ev.date}</div>
+              <div className="font-semibold text-stone-800">{ev.name}</div>
+              <div className="text-sm text-stone-400 mt-0.5">{ev.date}</div>
             </div>
             {session && (
               <button
                 onClick={e => handleDelete(e, ev.id)}
-                className="text-red-400 hover:text-red-600 text-sm px-2"
+                className="text-stone-300 hover:text-red-500 text-sm px-2 transition-colors"
               >
-                Delete
+                ✕
               </button>
             )}
           </li>
         ))}
         {events.length === 0 && (
-          <li className="px-4 py-8 text-center text-gray-400 text-sm">No events yet</li>
+          <li className="px-4 py-10 text-center text-stone-400 text-sm">No events yet</li>
         )}
       </ul>
       {showModal && <EventModal onSave={handleSave} onClose={() => setShowModal(false)} />}

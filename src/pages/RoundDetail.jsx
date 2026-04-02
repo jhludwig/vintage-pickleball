@@ -207,9 +207,10 @@ export default function RoundDetail() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="px-4 py-2 border-b flex items-center gap-2">
-        <button onClick={() => navigate(`/events/${eventId}`)} className="text-sm text-blue-500">← {event?.name}</button>
-        <span className="text-sm font-medium text-gray-600">/ Round {round?.round_number}</span>
+      <div className="px-4 py-2 border-b border-stone-200 bg-white flex items-center gap-2">
+        <button onClick={() => navigate(`/events/${eventId}`)} className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors">← {event?.name}</button>
+        <span className="text-sm text-stone-400">/</span>
+        <span className="text-sm font-semibold text-stone-700">Round {round?.round_number}</span>
       </div>
 
       <AlgorithmBar
@@ -241,7 +242,7 @@ export default function RoundDetail() {
       </div>
 
       {swapTarget && (
-        <div className="fixed bottom-16 left-0 right-0 bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
+        <div className="fixed bottom-16 left-0 right-0 bg-amber-50 border-t border-amber-200 px-4 py-2.5 text-sm text-amber-800 text-center">
           Tap another player to swap with <strong>{swapTarget.name}</strong>. Tap same player to cancel.
         </div>
       )}

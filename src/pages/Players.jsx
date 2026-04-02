@@ -43,12 +43,12 @@ export default function Players() {
   if (loading) return <Spinner />
 
   return (
-    <div>
+    <div className="max-w-lg mx-auto pb-4">
       {session && (
-        <div className="p-4 pb-0 flex justify-end">
+        <div className="px-4 pt-4 flex justify-end">
           <button
             onClick={() => setModal('add')}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
           >
             + Add Player
           </button>
