@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
-const HEADER_IMAGE = 'https://www.thevintageclub.com/images/dynamic/getImage.gif?ID=100020072'
+const LOGO = 'https://static.clubessential.com/CEFED/_Axis-Website/Sites/VintageClub-2023/images/Logos/LogoColor.svg'
 
 export default function Layout() {
   const session = useAuth()
@@ -15,17 +15,16 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
-      {/* Header with background image */}
-      <header
-        className="relative text-white flex items-center justify-between px-4 py-5 overflow-hidden"
-        style={{ backgroundImage: `url('${HEADER_IMAGE}')`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-      >
-        <div className="absolute inset-0 bg-black/55" />
-        <h1 className="relative z-10 text-xl font-bold tracking-wide drop-shadow">Vintage Club Pickleball</h1>
+      {/* Header */}
+      <header className="bg-stone-900 text-white flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          <img src={LOGO} alt="Vintage Club" className="h-9 w-auto" />
+          <h1 className="text-lg font-semibold tracking-wide">Vintage Club Pickleball</h1>
+        </div>
         {session && (
           <button
             onClick={handleLogout}
-            className="relative z-10 text-sm text-white/70 hover:text-white transition-colors"
+            className="text-sm text-white/60 hover:text-white transition-colors"
           >
             Sign out
           </button>
