@@ -168,21 +168,6 @@ export default function RoundDetail() {
     setSwapTarget(null)
   }
 
-  function handleMoveToOtherTeam() {
-    if (!swapTarget) return
-    setDraftAssignments(prev => prev.map(court => {
-      const inTeam1 = court.team1.some(p => p.id === swapTarget.id)
-      const inTeam2 = court.team2.some(p => p.id === swapTarget.id)
-      if (inTeam1) {
-        return { ...court, team1: court.team1.filter(p => p.id !== swapTarget.id), team2: [...court.team2, swapTarget] }
-      }
-      if (inTeam2) {
-        return { ...court, team2: court.team2.filter(p => p.id !== swapTarget.id), team1: [...court.team1, swapTarget] }
-      }
-      return court
-    }))
-    setSwapTarget(null)
-  }
 
   async function handleCommit() {
     if (!confirm('Commit this round? Assignments will be saved.')) return
@@ -256,16 +241,8 @@ export default function RoundDetail() {
       </div>
 
       {swapTarget && (
-        <div className="fixed bottom-16 left-0 right-0 bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-sm text-yellow-800">
-          <div className="flex items-center justify-between gap-2">
-            <span>Selected: <strong>{swapTarget.name}</strong>. Tap another player to swap, or tap same to cancel.</span>
-            <button
-              onClick={handleMoveToOtherTeam}
-              className="shrink-0 px-3 py-1 bg-yellow-200 hover:bg-yellow-300 rounded text-xs font-medium"
-            >
-              Move to other team
-            </button>
-          </div>
+        <div className="fixed bottom-16 left-0 right-0 bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-sm text-yellow-800 text-center">
+          Tap another player to swap with <strong>{swapTarget.name}</strong>. Tap same player to cancel.
         </div>
       )}
     </div>
