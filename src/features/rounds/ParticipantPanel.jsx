@@ -1,5 +1,7 @@
+import { fullName } from '../../lib/playerName'
+
 export default function ParticipantPanel({ players, selected, onChange }) {
-  const sorted = [...players].sort((a, b) => a.name.localeCompare(b.name))
+  const sorted = [...players].sort((a, b) => a.last_name.localeCompare(b.last_name))
 
   return (
     <div className="w-36 shrink-0 border-r border-stone-200 bg-white p-2 overflow-y-auto">
@@ -18,7 +20,7 @@ export default function ParticipantPanel({ players, selected, onChange }) {
               className="accent-emerald-600"
             />
             <span className="text-xs truncate text-stone-700">
-              {p.name}
+              {fullName(p)}
               {p.ranking ? <span className="text-stone-400"> {p.ranking}</span> : ''}
               {p.player_type === 'guest' ? <span className="text-stone-400"> G</span> : null}
             </span>

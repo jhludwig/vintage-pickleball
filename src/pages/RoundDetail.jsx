@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { suggest } from '../features/rounds/algorithms'
+import { fullName } from '../lib/playerName'
 import AlgorithmBar from '../features/rounds/AlgorithmBar'
 import ParticipantPanel from '../features/rounds/ParticipantPanel'
 import CourtGrid from '../features/rounds/CourtGrid'
@@ -243,7 +244,7 @@ export default function RoundDetail() {
 
       {swapTarget && (
         <div className="fixed bottom-16 left-0 right-0 bg-amber-50 border-t border-amber-200 px-4 py-2.5 text-sm text-amber-800 text-center">
-          Tap another player to swap with <strong>{swapTarget.name}</strong>. Tap same player to cancel.
+          Tap another player to swap with <strong>{fullName(swapTarget)}</strong>. Tap same player to cancel.
         </div>
       )}
     </div>

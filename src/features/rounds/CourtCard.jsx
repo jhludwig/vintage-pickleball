@@ -1,3 +1,5 @@
+import { fullName } from '../../lib/playerName'
+
 export default function CourtCard({ courtNumber, isActive, team1, team2, winningTeam, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite }) {
   return (
     <div className={`rounded-xl overflow-hidden border transition-all ${isActive ? 'border-emerald-300 shadow-sm' : 'border-stone-200 opacity-50'}`}>
@@ -36,7 +38,7 @@ export default function CourtCard({ courtNumber, isActive, team1, team2, winning
                   onClick={() => canWrite && !isCommitted && onPlayerClick(p)}
                   className={`text-xs truncate py-0.5 rounded px-0.5 ${canWrite && !isCommitted ? 'cursor-pointer hover:bg-white/60 hover:text-emerald-700' : 'text-stone-700'}`}
                 >
-                  {p.name}
+                  {fullName(p)}
                 </div>
               ))}
             </div>

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 
 const COLS = [
-  { key: 'name', label: 'Name' },
+  { key: 'last_name', label: 'Last Name' },
+  { key: 'first_name', label: 'First Name' },
   { key: 'player_type', label: 'Type' },
   { key: 'gender', label: 'Gender' },
   { key: 'ranking', label: 'Ranking' },
@@ -20,13 +21,13 @@ function sortPlayers(players, col, dir) {
       av = av ? 1 : 0; bv = bv ? 1 : 0
       return dir === 'asc' ? av - bv : bv - av
     }
-    av = String(av).toLowerCase(); bv = String(bv).toLowerCase()
+    av = String(av ?? '').toLowerCase(); bv = String(bv ?? '').toLowerCase()
     return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
   })
 }
 
 export default function PlayerTable({ players, onRowClick }) {
-  const [sortCol, setSortCol] = useState('name')
+  const [sortCol, setSortCol] = useState('last_name')
   const [sortDir, setSortDir] = useState('asc')
 
   function handleSort(col) {
@@ -65,7 +66,8 @@ export default function PlayerTable({ players, onRowClick }) {
                 onClick={() => onRowClick(p)}
                 className="hover:bg-stone-50 cursor-pointer transition-colors"
               >
-                <td className="px-3 py-2.5 font-medium text-stone-800">{p.name}</td>
+                <td className="px-3 py-2.5 font-medium text-stone-800">{p.last_name}</td>
+                <td className="px-3 py-2.5 text-stone-700">{p.first_name}</td>
                 <td className="px-3 py-2.5 capitalize text-stone-600">{p.player_type}</td>
                 <td className="px-3 py-2.5 text-stone-600">{p.gender}</td>
                 <td className="px-3 py-2.5 text-stone-600">{p.ranking}</td>

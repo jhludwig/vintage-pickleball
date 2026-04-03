@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Modal from '../../components/Modal'
+import { fullName } from '../../lib/playerName'
 
-const EMPTY = { name: '', gender: '', ranking: '', player_type: 'member', plays_pickleball: true }
+const EMPTY = { first_name: '', last_name: '', gender: '', ranking: '', player_type: 'member', plays_pickleball: true }
 
 export default function PlayerModal({ player, onSave, onDelete, onClose }) {
   const [form, setForm] = useState(player ?? EMPTY)
@@ -13,7 +14,7 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) return
+    if (!form.first_name.trim() && !form.last_name.trim()) return
     setSaving(true)
     try {
       await onSave(form)
@@ -23,7 +24,7 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete ${player.name}?`)) return
+    if (!confirm(`Delete ${fullName(player)}?`)) return
     await onDelete(player.id)
   }
 
@@ -33,13 +34,23 @@ export default function PlayerModal({ player, onSave, onDelete, onClose }) {
   return (
     <Modal title={isEdit ? 'Edit Player' : 'Add Player'} onClose={onClose}>
       <div className="space-y-3">
-        <div>
-          <label className={labelClass}>Name</label>
-          <input
-            className={inputClass}
-            value={form.name}
-            onChange={e => set('name', e.target.value)}
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelClass}>First Name</label>
+            <input
+              className={inputClass}
+              value={form.first_name}
+              onChange={e => set('first_name', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Last Name</label>
+            <input
+              className={inputClass}
+              value={form.last_name}
+              onChange={e => set('last_name', e.target.value)}
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
