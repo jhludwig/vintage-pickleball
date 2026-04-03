@@ -42,7 +42,7 @@ export default function RoundDetail() {
     ] = await Promise.all([
       supabase.from('rounds').select('*').eq('id', roundId).single(),
       supabase.from('events').select('*').eq('id', eventId).single(),
-      supabase.from('players').select('*').eq('plays_pickleball', true).order('name'),
+      supabase.from('players').select('*').eq('plays_pickleball', true).order('last_name').order('first_name'),
       supabase.from('active_courts').select('*').eq('round_id', roundId).order('court_number'),
       supabase.from('round_participants').select('player_id').eq('round_id', roundId),
       supabase.from('court_assignments').select('*, players(*)').eq('round_id', roundId),

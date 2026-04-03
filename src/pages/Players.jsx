@@ -12,7 +12,7 @@ export default function Players() {
   const [modal, setModal] = useState(null) // null | 'add' | player object
 
   const loadPlayers = useCallback(async () => {
-    const { data, error } = await supabase.from('players').select('*').order('name')
+    const { data, error } = await supabase.from('players').select('*').order('last_name').order('first_name')
     if (error) { console.error('Failed to load players:', error) }
     setPlayers(data ?? [])
     setLoading(false)

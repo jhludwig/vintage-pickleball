@@ -41,7 +41,7 @@ for (const line of lines) {
     first_name,
     gender: gender || null,
     plays_pickleball: active.toUpperCase() === 'Y',
-    ranking: rating && rating !== '0' ? rating : null,
+    ranking: rating && rating !== '0' ? rating : '',
     player_type: 'member',
   })
 }
