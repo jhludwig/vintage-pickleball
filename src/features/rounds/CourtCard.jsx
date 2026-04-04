@@ -18,9 +18,9 @@ export default function CourtCard({ courtNumber, isActive, team1, team2, winning
         )}
       </div>
       {isActive && (
-        <div className="flex">
+        <div className="flex flex-col">
           {[{ team: 1, players: team1 }, { team: 2, players: team2 }].map(({ team, players }) => (
-            <div key={team} className={`flex-1 p-2 ${team === 1 ? 'bg-blue-50 border-r border-blue-100' : 'bg-orange-50'}`}>
+            <div key={team} className={`p-2 ${team === 1 ? 'bg-blue-50 border-b border-blue-100' : 'bg-orange-50'}`}>
               <div className={`text-xs font-semibold mb-1.5 flex items-center gap-1 ${team === 1 ? 'text-blue-500' : 'text-orange-400'}`}>
                 Team {team}
                 {isCommitted && canWrite && (

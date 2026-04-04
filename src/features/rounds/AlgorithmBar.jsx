@@ -5,6 +5,15 @@ const EXCLUSIVE = [
   { key: 'riverMode', label: 'River' },
 ]
 
+function Checkbox({ label, checked, onChange }) {
+  return (
+    <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer whitespace-nowrap">
+      <input type="checkbox" checked={checked} onChange={onChange} className="accent-emerald-600" />
+      {label}
+    </label>
+  )
+}
+
 export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCommit, isCommitted, canWrite }) {
   function handleExclusive(key, checked) {
     EXCLUSIVE.forEach(cb => onOptionChange(cb.key, false))
@@ -21,54 +30,40 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           ✨ Suggest
         </button>
       )}
-      <div className="flex items-center gap-3 flex-1 justify-center flex-wrap">
-        <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={!!options.memberPriority}
-            onChange={e => onOptionChange('memberPriority', e.target.checked)}
-            className="accent-emerald-600"
-          />
-          Member Priority
-        </label>
 
-        <div className="w-px h-4 bg-stone-300 shrink-0" />
+      <div className="flex-1 flex items-center gap-2 flex-wrap justify-center">
+        <Checkbox
+          label="Member Priority"
+          checked={!!options.memberPriority}
+          onChange={e => onOptionChange('memberPriority', e.target.checked)}
+        />
 
-        {EXCLUSIVE.map(cb => (
-          <label key={cb.key} className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer">
-            <input
-              type="checkbox"
+        {/* Mutually exclusive group — visually boxed so it stays coherent when wrapping */}
+        <div className="flex items-center gap-2 flex-wrap bg-stone-100 rounded-lg px-2 py-1">
+          {EXCLUSIVE.map(cb => (
+            <Checkbox
+              key={cb.key}
+              label={cb.label}
               checked={!!options[cb.key]}
               onChange={e => handleExclusive(cb.key, e.target.checked)}
-              className="accent-emerald-600"
             />
-            {cb.label}
-          </label>
-        ))}
+          ))}
+        </div>
 
-        <div className="w-px h-4 bg-stone-300 shrink-0" />
-
-        <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={!!options.genderPriority}
-            onChange={e => onOptionChange('genderPriority', e.target.checked)}
-            className="accent-emerald-600"
-          />
-          Gender Sorting
-        </label>
+        <Checkbox
+          label="Gender Sorting"
+          checked={!!options.genderPriority}
+          onChange={e => onOptionChange('genderPriority', e.target.checked)}
+        />
       </div>
 
       {canWrite && !isCommitted && (
-        <>
-          <div className="w-px h-6 bg-stone-300 shrink-0" />
-          <button
-            onClick={onCommit}
-            className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shrink-0"
-          >
-            Commit Round
-          </button>
-        </>
+        <button
+          onClick={onCommit}
+          className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shrink-0"
+        >
+          Commit Round
+        </button>
       )}
     </div>
   )
