@@ -170,6 +170,23 @@ export default function RoundDetail() {
   }
 
 
+  async function handleAddGuest({ first_name, last_name, gender, ranking }) {
+    const { data: player, error: insError } = await supabase
+      .from('players')
+      .insert({ first_name, last_name, gender: gender || null, ranking: ranking || '', player_type: 'guest', plays_pickleball: true })
+      .select()
+      .single()
+    if (insError) { alert(`Failed to add guest: ${insError.message}`); return }
+    // Add to round participants
+    const { error: partError } = await supabase
+      .from('round_participants')
+      .insert({ round_id: roundId, player_id: player.id })
+    if (partError) { alert(`Failed to add guest to round: ${partError.message}`); return }
+    // Update local state immediately — no need to reload
+    setAllPlayers(prev => [...prev, player])
+    setParticipants(prev => new Set([...prev, player.id]))
+  }
+
   async function handleCommit() {
     if (!confirm('Commit this round? Assignments will be saved.')) return
     // Save all draft assignments to DB
@@ -228,6 +245,8 @@ export default function RoundDetail() {
           players={allPlayers}
           selected={participants}
           onChange={handleParticipantChange}
+          canWrite={canWrite}
+          onAddGuest={handleAddGuest}
         />
         <CourtGrid
           courts={courts}
