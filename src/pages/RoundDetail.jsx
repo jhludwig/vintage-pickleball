@@ -246,6 +246,12 @@ export default function RoundDetail() {
         canWrite={canWrite}
       />
 
+      {swapTarget && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-sm text-amber-800 text-center shrink-0">
+          Tap another player to swap with <strong>{fullName(swapTarget)}</strong>. Tap same player to cancel.
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden">
         <ParticipantPanel
           players={allPlayers}
@@ -268,11 +274,6 @@ export default function RoundDetail() {
         />
       </div>
 
-      {swapTarget && (
-        <div className="fixed bottom-16 left-0 right-0 bg-amber-50 border-t border-amber-200 px-4 py-2.5 text-sm text-amber-800 text-center">
-          Tap another player to swap with <strong>{fullName(swapTarget)}</strong>. Tap same player to cancel.
-        </div>
-      )}
     </div>
   )
 }
