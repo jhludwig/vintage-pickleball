@@ -69,18 +69,16 @@ export default function EventDetail() {
           }
         }
       }
-      const maxWins = Math.max(0, ...Object.values(winCounts))
-      const topWinners = maxWins > 0
-        ? Object.entries(winCounts)
-            .filter(([, count]) => count === maxWins)
-            .map(([pid]) => {
-              const asn = (allAssignments ?? []).find(a => a.player_id === pid && a.players)
-              return asn ? { ...asn.players, wins: maxWins } : null
-            })
-            .filter(Boolean)
-        : []
+      const topWinners = Object.entries(winCounts)
+        .map(([pid, wins]) => {
+          const asn = (allAssignments ?? []).find(a => a.player_id === pid && a.players)
+          return asn ? { ...asn.players, wins } : null
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.wins - a.wins)
+        .slice(0, 3)
 
-      computedStats = { totalPlayers, totalGuests, topWinners, maxWins }
+      computedStats = { totalPlayers, totalGuests, topWinners }
     }
 
     setEvent(ev)
@@ -161,13 +159,17 @@ export default function EventDetail() {
           {stats.topWinners.length > 0 && (
             <div className="mt-3 bg-white border border-stone-200 rounded-xl shadow-sm p-4">
               <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">
-                Most Wins ({stats.maxWins})
+                Top Winners
               </div>
-              <div className="flex flex-wrap gap-2">
-                {stats.topWinners.map(p => (
-                  <span key={p.id} className="text-sm px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 font-medium">
-                    {fullName(p)}
-                  </span>
+              <div className="flex flex-col gap-1.5">
+                {stats.topWinners.map((p, i) => (
+                  <div key={p.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-stone-400 w-4">{i + 1}.</span>
+                      <span className="text-sm font-medium text-stone-800">{fullName(p)}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-emerald-600">{p.wins} {p.wins === 1 ? 'win' : 'wins'}</span>
+                  </div>
                 ))}
               </div>
             </div>
