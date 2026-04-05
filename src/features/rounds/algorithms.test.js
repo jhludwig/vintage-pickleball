@@ -198,4 +198,41 @@ describe('suggest — river mode', () => {
     const court2Ids = allPlayers(result.filter(c => c.court_number === 2)).map(p => p.id).sort()
     expect(court2Ids).toEqual(['c1l1', 'c1l2', 'c2l1', 'c2l2'].sort())
   })
+
+  it('splits former teammates across teams', () => {
+    const c1w1 = makePlayer('c1w1', 'C1W1', 'member', '4.5')
+    const c1w2 = makePlayer('c1w2', 'C1W2', 'member', '4.0')
+    const c1l1 = makePlayer('c1l1', 'C1L1', 'member', '3.5')
+    const c1l2 = makePlayer('c1l2', 'C1L2', 'member', '3.0')
+    const c2w1 = makePlayer('c2w1', 'C2W1', 'member', '3.0')
+    const c2w2 = makePlayer('c2w2', 'C2W2', 'member', '2.5')
+    const c2l1 = makePlayer('c2l1', 'C2L1', 'member', '2.0')
+    const c2l2 = makePlayer('c2l2', 'C2L2', 'member', '1.5')
+    const priorRoundResult = {
+      1: { winners: [c1w1, c1w2], losers: [c1l1, c1l2] },
+      2: { winners: [c2w1, c2w2], losers: [c2l1, c2l2] },
+    }
+    const result = suggest({
+      participants: [c1w1, c1w2, c1l1, c1l2, c2w1, c2w2, c2l1, c2l2],
+      activeCourts: [1, 2],
+      options: { riverMode: true },
+      priorRoundResult,
+    })
+    const court1 = result.find(c => c.court_number === 1)
+    const court2 = result.find(c => c.court_number === 2)
+    const c1t1 = court1.team1.map(p => p.id)
+    const c1t2 = court1.team2.map(p => p.id)
+    // c1w1 & c1w2 were teammates — must not both be on the same team
+    expect(c1t1.includes('c1w1') && c1t1.includes('c1w2')).toBe(false)
+    expect(c1t2.includes('c1w1') && c1t2.includes('c1w2')).toBe(false)
+    // c2w1 & c2w2 were teammates — must not both be on the same team
+    expect(c1t1.includes('c2w1') && c1t1.includes('c2w2')).toBe(false)
+    expect(c1t2.includes('c2w1') && c1t2.includes('c2w2')).toBe(false)
+    const c2t1 = court2.team1.map(p => p.id)
+    const c2t2 = court2.team2.map(p => p.id)
+    expect(c2t1.includes('c1l1') && c2t1.includes('c1l2')).toBe(false)
+    expect(c2t2.includes('c1l1') && c2t2.includes('c1l2')).toBe(false)
+    expect(c2t1.includes('c2l1') && c2t1.includes('c2l2')).toBe(false)
+    expect(c2t2.includes('c2l1') && c2t2.includes('c2l2')).toBe(false)
+  })
 })

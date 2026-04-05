@@ -214,13 +214,14 @@ function socialPriorityArrange(selected, numCourts, priorRounds) {
 }
 
 function riverAssign(pool, activeCourts, priorRoundResult) {
-  // Build new court groups: winners of court N move to court N-1, losers move to court N+1
-  // Court 1 winners stay on court 1; lowest court losers stay on lowest court
+  // Winners of court N move to court N-1; losers move to court N+1.
+  // Court 1 winners stay; lowest court losers stay.
+  // Former teammates are always split across teams at their new court.
   const sortedCourts = [...activeCourts].sort((a, b) => a - b)
   const numCourts = sortedCourts.length
 
-  // Map priorRoundResult keys (court numbers) to sorted index
-  const newGroups = {} // courtIndex -> Player[]
+  // newGroups[i] = array of [Player, Player] pairs (former teammates to be split)
+  const newGroups = {}
   for (let i = 0; i < numCourts; i++) newGroups[i] = []
 
   for (let i = 0; i < numCourts; i++) {
@@ -228,16 +229,17 @@ function riverAssign(pool, activeCourts, priorRoundResult) {
     const result = priorRoundResult[courtNum]
     if (!result) continue
     const { winners, losers } = result
-    // Winners move up (lower index), except court 0 winners stay
     const winIdx = Math.max(0, i - 1)
-    // Losers move down (higher index), except last court losers stay
     const loseIdx = Math.min(numCourts - 1, i + 1)
-    newGroups[winIdx].push(...winners)
-    newGroups[loseIdx].push(...losers)
+    newGroups[winIdx].push(winners)  // push as a pair — will be split across teams
+    newGroups[loseIdx].push(losers)
   }
 
   return sortedCourts.map((courtNum, i) => {
-    const group = newGroups[i].slice(0, 4)
-    return makeCourt(courtNum, group)
+    const groups = newGroups[i] // e.g. [[A, B], [C, D]]
+    // First player of each pair → team1, second → team2 (splits former teammates)
+    const team1 = groups.map(g => g[0]).filter(Boolean).slice(0, 2)
+    const team2 = groups.map(g => g[1]).filter(Boolean).slice(0, 2)
+    return { court_number: courtNum, team1, team2 }
   })
 }
