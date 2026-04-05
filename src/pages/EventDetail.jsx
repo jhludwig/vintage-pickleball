@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { fullName } from '../lib/playerName'
 import Spinner from '../components/Spinner'
 
 function roundStatus(round) {
@@ -16,6 +17,7 @@ export default function EventDetail() {
   const session = useAuth()
   const [event, setEvent] = useState(null)
   const [rounds, setRounds] = useState([])
+  const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -28,17 +30,62 @@ export default function EventDetail() {
 
     const roundIds = (rds ?? []).map(r => r.id)
     let resultRoundIds = new Set()
+    let computedStats = null
+
     if (roundIds.length > 0) {
-      const { data: results, error: resError } = await supabase
-        .from('court_results')
-        .select('round_id')
-        .in('round_id', roundIds)
-      if (resError) { console.error('Failed to load results:', resError) }
+      const [
+        { data: results },
+        { data: participants },
+        { data: allResults },
+        { data: allAssignments },
+      ] = await Promise.all([
+        supabase.from('court_results').select('round_id').in('round_id', roundIds),
+        supabase.from('round_participants').select('player_id, players(id, first_name, last_name, player_type)').in('round_id', roundIds),
+        supabase.from('court_results').select('round_id, court_number, winning_team').in('round_id', roundIds),
+        supabase.from('court_assignments').select('round_id, court_number, player_id, team, players(id, first_name, last_name)').in('round_id', roundIds),
+      ])
+
       resultRoundIds = new Set((results ?? []).map(r => r.round_id))
+
+      // Unique players and guests across all rounds
+      const seenPlayers = new Map() // player_id -> player object
+      for (const row of (participants ?? [])) {
+        if (row.players && !seenPlayers.has(row.player_id)) {
+          seenPlayers.set(row.player_id, row.players)
+        }
+      }
+      const totalPlayers = seenPlayers.size
+      const totalGuests = [...seenPlayers.values()].filter(p => p.player_type === 'guest').length
+
+      // Win counts per player
+      const winCounts = {}
+      for (const result of (allResults ?? [])) {
+        const courtPlayers = (allAssignments ?? []).filter(
+          a => a.round_id === result.round_id && a.court_number === result.court_number && a.team === result.winning_team
+        )
+        for (const a of courtPlayers) {
+          if (a.players) {
+            winCounts[a.player_id] = (winCounts[a.player_id] ?? 0) + 1
+          }
+        }
+      }
+      const maxWins = Math.max(0, ...Object.values(winCounts))
+      const topWinners = maxWins > 0
+        ? Object.entries(winCounts)
+            .filter(([, count]) => count === maxWins)
+            .map(([pid]) => {
+              const asn = (allAssignments ?? []).find(a => a.player_id === pid && a.players)
+              return asn ? { ...asn.players, wins: maxWins } : null
+            })
+            .filter(Boolean)
+        : []
+
+      computedStats = { totalPlayers, totalGuests, topWinners, maxWins }
     }
 
     setEvent(ev)
     setRounds((rds ?? []).map(r => ({ ...r, hasResults: resultRoundIds.has(r.id) })))
+    setStats(computedStats)
     setLoading(false)
   }, [eventId])
 
@@ -94,6 +141,39 @@ export default function EventDetail() {
         <h2 className="text-xl font-bold text-stone-800">{event.name}</h2>
         <p className="text-sm text-stone-400">{event.date}</p>
       </div>
+
+      {stats && rounds.length > 0 && (
+        <div className="px-4 pb-3">
+          <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-4 grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-stone-800">{rounds.length}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Rounds</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-stone-800">{stats.totalPlayers}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Players</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-stone-800">{stats.totalGuests}</div>
+              <div className="text-xs text-stone-400 mt-0.5">Guests</div>
+            </div>
+          </div>
+          {stats.topWinners.length > 0 && (
+            <div className="mt-3 bg-white border border-stone-200 rounded-xl shadow-sm p-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">
+                Most Wins ({stats.maxWins})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {stats.topWinners.map(p => (
+                  <span key={p.id} className="text-sm px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 font-medium">
+                    {fullName(p)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="px-4 pb-4">
         {session && (
