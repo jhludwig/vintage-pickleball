@@ -56,6 +56,21 @@ export default function EventDetail() {
       Array.from({ length: 8 }, (_, i) => ({ round_id: round.id, court_number: i + 1, is_active: true }))
     )
     if (courtsError) { console.error('Failed to create courts:', courtsError) }
+
+    // Copy participants from the most recent prior round
+    if (rounds.length > 0) {
+      const prevRound = rounds.reduce((a, b) => a.round_number > b.round_number ? a : b)
+      const { data: prevParticipants } = await supabase
+        .from('round_participants')
+        .select('player_id')
+        .eq('round_id', prevRound.id)
+      if (prevParticipants && prevParticipants.length > 0) {
+        await supabase.from('round_participants').insert(
+          prevParticipants.map(p => ({ round_id: round.id, player_id: p.player_id }))
+        )
+      }
+    }
+
     load()
   }
 
