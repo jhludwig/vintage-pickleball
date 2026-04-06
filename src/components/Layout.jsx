@@ -21,12 +21,19 @@ export default function Layout() {
           <img src={LOGO} alt="Vintage Club" className="h-9 w-auto" />
           <h1 className="text-lg font-semibold tracking-wide">Vintage Club Pickleball</h1>
         </div>
-        {session && (
+        {session ? (
           <button
             onClick={handleLogout}
             className="text-sm text-white/60 hover:text-white transition-colors"
           >
             Sign out
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            className="text-sm text-white/60 hover:text-white transition-colors"
+          >
+            Sign in
           </button>
         )}
       </header>
