@@ -1,4 +1,5 @@
 const EXCLUSIVE = [
+  { key: 'randomMode', label: 'Random' },
   { key: 'rankPriority', label: 'Ranking' },
   { key: 'socialPriority', label: 'Social' },
   { key: 'mixedPriority', label: 'Mixed' },

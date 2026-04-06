@@ -52,6 +52,12 @@ export function suggest({ participants, activeCourts, options = {}, priorRounds 
   // Pros are never assigned by algorithm
   const pool = participants.filter(p => p.player_type !== 'pro')
 
+  if (options.randomMode) {
+    const slots = activeCourts.length * 4
+    const selected = shuffle([...pool]).slice(0, slots)
+    return activeCourts.map((courtNum, i) => makeCourt(courtNum, selected.slice(i * 4, i * 4 + 4)))
+  }
+
   if (options.riverMode && priorRoundResult) {
     return riverAssign(pool, activeCourts, priorRoundResult)
   }
