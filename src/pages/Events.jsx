@@ -17,10 +17,12 @@ export default function Events() {
   const [showScheduleModal, setShowScheduleModal] = useState(false)
 
   const loadEvents = useCallback(async () => {
-    const [{ data: evData }, { data: tmplData }] = await Promise.all([
+    const [{ data: evData, error: evError }, { data: tmplData, error: tmplError }] = await Promise.all([
       supabase.from('events').select('*').order('date', { ascending: false }),
       supabase.from('event_templates').select('*').order('created_at'),
     ])
+    if (evError) console.error('Failed to load events:', evError)
+    if (tmplError) console.error('Failed to load templates:', tmplError)
 
     const activeTemplates = (tmplData ?? []).filter(t => t.is_active)
 
