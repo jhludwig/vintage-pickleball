@@ -4,13 +4,18 @@ import { DAYS } from './schedules'
 
 export default function ScheduleModal({ onSave, onClose }) {
   const [name, setName] = useState('')
-  const [dayOfWeek, setDayOfWeek] = useState(2) // Tuesday default
+  const [dayOfWeek, setDayOfWeek] = useState('2') // Tuesday default
   const [seasonStart, setSeasonStart] = useState('11-01')
   const [seasonEnd, setSeasonEnd] = useState('05-31')
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
     if (!name.trim()) return
+    const mmddPattern = /^\d{2}-\d{2}$/
+    if (!mmddPattern.test(seasonStart) || !mmddPattern.test(seasonEnd)) {
+      alert('Season start and end must be in MM-DD format (e.g. 11-01)')
+      return
+    }
     setSaving(true)
     try {
       await onSave({
@@ -24,7 +29,7 @@ export default function ScheduleModal({ onSave, onClose }) {
     }
   }
 
-  const inputClass = 'w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500'
+  const inputClass = 'w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
 
   return (
     <Modal title="Add Schedule" onClose={onClose}>
