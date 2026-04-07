@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
@@ -120,17 +120,25 @@ export default function RoundDetail() {
 
   useEffect(() => { load() }, [load])
 
-  async function handleParticipantChange(newSet) {
+  const saveParticipantsTimer = useRef(null)
+  const pendingParticipants = useRef(null)
+
+  function handleParticipantChange(newSet) {
     setParticipants(newSet)
     if (!canWrite) return
-    const { error: delError } = await supabase.from('round_participants').delete().eq('round_id', roundId)
-    if (delError) { alert(`Failed to update participants: ${delError.message}`); return }
-    if (newSet.size > 0) {
-      const { error: insError } = await supabase.from('round_participants').insert(
-        [...newSet].map(pid => ({ round_id: roundId, player_id: pid }))
-      )
-      if (insError) { alert(`Failed to update participants: ${insError.message}`); return }
-    }
+    pendingParticipants.current = newSet
+    clearTimeout(saveParticipantsTimer.current)
+    saveParticipantsTimer.current = setTimeout(async () => {
+      const toSave = pendingParticipants.current
+      const { error: delError } = await supabase.from('round_participants').delete().eq('round_id', roundId)
+      if (delError) { alert(`Failed to update participants: ${delError.message}`); return }
+      if (toSave.size > 0) {
+        const { error: insError } = await supabase.from('round_participants').insert(
+          [...toSave].map(pid => ({ round_id: roundId, player_id: pid }))
+        )
+        if (insError) { alert(`Failed to update participants: ${insError.message}`); return }
+      }
+    }, 400)
   }
 
   async function handleToggleActive(courtNumber, isActive) {
