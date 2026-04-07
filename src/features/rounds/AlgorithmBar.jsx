@@ -40,7 +40,7 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
         />
 
         {/* Mutually exclusive group — visually boxed so it stays coherent when wrapping */}
-        <div className="flex items-center gap-2 flex-wrap bg-stone-100 rounded-lg px-2 py-1">
+        <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">
           {EXCLUSIVE.map(cb => (
             <Checkbox
               key={cb.key}
