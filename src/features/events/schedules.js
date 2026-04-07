@@ -29,7 +29,10 @@ export function getNextOccurrence(template, todayStr) {
     candidate.setDate(candidate.getDate() + 1)
   }
 
-  const candidateStr = candidate.toISOString().split('T')[0]
+  const y = candidate.getFullYear()
+  const m = String(candidate.getMonth() + 1).padStart(2, '0')
+  const d = String(candidate.getDate()).padStart(2, '0')
+  const candidateStr = `${y}-${m}-${d}`
   const mmdd = candidateStr.slice(5) // 'MM-DD'
 
   return isInSeason(mmdd, season_start, season_end) ? candidateStr : null

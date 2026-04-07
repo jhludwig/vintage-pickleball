@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getNextOccurrence } from './schedules'
+import { getNextOccurrence, DAYS } from './schedules'
 
 // Reference: 2026-04-07 is a Tuesday (day 2), in-season for Nov-May
 const TUE = 2
@@ -44,5 +44,23 @@ describe('getNextOccurrence', () => {
       { day_of_week: TUE, season_start: '06-01', season_end: '08-31' },
       '2026-04-07'
     )).toBeNull()
+  })
+})
+
+describe('DAYS', () => {
+  it('is a 7-element array starting with Sunday', () => {
+    expect(DAYS).toHaveLength(7)
+    expect(DAYS[0]).toBe('Sunday')
+    expect(DAYS[2]).toBe('Tuesday')
+    expect(DAYS[6]).toBe('Saturday')
+  })
+})
+
+describe('getNextOccurrence wrapping season', () => {
+  it('returns date on the first day of the wrapping season', () => {
+    expect(getNextOccurrence(
+      { day_of_week: 2, season_start: '11-01', season_end: '05-31' },
+      '2025-11-04'
+    )).toBe('2025-11-04')
   })
 })
