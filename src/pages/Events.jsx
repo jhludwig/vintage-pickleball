@@ -42,7 +42,8 @@ export default function Events() {
   useEffect(() => { loadEvents() }, [loadEvents])
 
   async function generateMissingEvents(activeTemplates) {
-    const today = new Date().toISOString().split('T')[0]
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     const templateIds = activeTemplates.map(t => t.id)
 
     const { data: existing } = await supabase
@@ -94,7 +95,10 @@ export default function Events() {
     setTemplates(prev => prev.map(t => t.id === id ? { ...t, is_active: isActive } : t))
     const { error } = await supabase
       .from('event_templates').update({ is_active: isActive }).eq('id', id)
-    if (error) console.error('Failed to update schedule:', error)
+    if (error) {
+      console.error('Failed to update schedule:', error)
+      setTemplates(prev => prev.map(t => t.id === id ? { ...t, is_active: !isActive } : t))
+    }
   }
 
   if (loading) return <Spinner />
