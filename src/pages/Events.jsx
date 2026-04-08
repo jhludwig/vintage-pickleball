@@ -91,6 +91,13 @@ export default function Events() {
     loadEvents()
   }
 
+  async function handleDeleteTemplate(id) {
+    if (!confirm('Delete this recurring schedule?')) return
+    const { error } = await supabase.from('event_templates').delete().eq('id', id)
+    if (error) { alert(`Failed to delete schedule: ${error.message}`); return }
+    setTemplates(prev => prev.filter(t => t.id !== id))
+  }
+
   async function handleToggleTemplate(id, isActive) {
     setTemplates(prev => prev.map(t => t.id === id ? { ...t, is_active: isActive } : t))
     const { error } = await supabase
@@ -167,17 +174,25 @@ export default function Events() {
                       {DAYS[t.day_of_week]} · {t.season_start} – {t.season_end}
                     </div>
                   </div>
-                  <label className="flex items-center gap-1.5 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={t.is_active}
-                      onChange={e => handleToggleTemplate(t.id, e.target.checked)}
-                      className="accent-emerald-600"
-                    />
-                    <span className="text-xs text-stone-500">
-                      {t.is_active ? 'Active' : 'Paused'}
-                    </span>
-                  </label>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={t.is_active}
+                        onChange={e => handleToggleTemplate(t.id, e.target.checked)}
+                        className="accent-emerald-600"
+                      />
+                      <span className="text-xs text-stone-500">
+                        {t.is_active ? 'Active' : 'Paused'}
+                      </span>
+                    </label>
+                    <button
+                      onClick={() => handleDeleteTemplate(t.id)}
+                      className="text-stone-300 hover:text-red-500 text-sm transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
