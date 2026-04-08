@@ -11,18 +11,32 @@ export default function Events() {
   const session = useAuth()
   const navigate = useNavigate()
   const [events, setEvents] = useState([])
+  const [eventIdsWithScores, setEventIdsWithScores] = useState(new Set())
   const [templates, setTemplates] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
 
   const loadEvents = useCallback(async () => {
-    const [{ data: evData, error: evError }, { data: tmplData, error: tmplError }] = await Promise.all([
+    const [
+      { data: evData, error: evError },
+      { data: tmplData, error: tmplError },
+      { data: roundData },
+      { data: resultData },
+    ] = await Promise.all([
       supabase.from('events').select('*').order('date', { ascending: false }),
       supabase.from('event_templates').select('*').order('created_at'),
+      supabase.from('rounds').select('id, event_id'),
+      supabase.from('court_results').select('round_id'),
     ])
     if (evError) console.error('Failed to load events:', evError)
     if (tmplError) console.error('Failed to load templates:', tmplError)
+
+    const roundsWithResults = new Set((resultData ?? []).map(r => r.round_id))
+    const withScores = new Set(
+      (roundData ?? []).filter(r => roundsWithResults.has(r.id)).map(r => r.event_id)
+    )
+    setEventIdsWithScores(withScores)
 
     const activeTemplates = (tmplData ?? []).filter(t => t.is_active)
 
@@ -110,21 +124,13 @@ export default function Events() {
 
   if (loading) return <Spinner />
 
-  return (
-    <div className="max-w-lg mx-auto">
-      {session && (
-        <div className="px-4 pt-4 flex justify-end">
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
-          >
-            + Add Event
-          </button>
-        </div>
-      )}
+  const upcomingEvents = events.filter(e => !eventIdsWithScores.has(e.id))
+  const pastEvents = events.filter(e => eventIdsWithScores.has(e.id))
 
-      <ul className="divide-y divide-stone-100 mt-3 mx-4 bg-white rounded-xl shadow-sm overflow-hidden border border-stone-200">
-        {events.map(ev => (
+  function EventList({ items, emptyText }) {
+    return (
+      <ul className="divide-y divide-stone-100 bg-white rounded-xl shadow-sm overflow-hidden border border-stone-200">
+        {items.map(ev => (
           <li
             key={ev.id}
             onClick={() => navigate(`/events/${ev.id}`)}
@@ -144,10 +150,37 @@ export default function Events() {
             )}
           </li>
         ))}
-        {events.length === 0 && (
-          <li className="px-4 py-10 text-center text-stone-400 text-sm">No events yet</li>
+        {items.length === 0 && (
+          <li className="px-4 py-6 text-center text-stone-400 text-sm">{emptyText}</li>
         )}
       </ul>
+    )
+  }
+
+  return (
+    <div className="max-w-lg mx-auto pb-6">
+      <div className="px-4 pt-4 flex justify-end">
+        {session && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            + Add Event
+          </button>
+        )}
+      </div>
+
+      <div className="px-4 mt-4">
+        <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">Upcoming Events</div>
+        <EventList items={upcomingEvents} emptyText="No upcoming events" />
+      </div>
+
+      {pastEvents.length > 0 && (
+        <div className="px-4 mt-6">
+          <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">Past Events</div>
+          <EventList items={pastEvents} emptyText="" />
+        </div>
+      )}
 
       {session && (
         <div className="px-4 mt-6 pb-6">
