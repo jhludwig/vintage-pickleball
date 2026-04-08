@@ -97,9 +97,11 @@ function standardAssign(pool, activeCourts, options, priorRounds) {
   // Take only as many players as fit
   let selected = sorted.slice(0, slots)
 
-  // Gender Priority: rearrange selected to group genders per court
+  // Gender options: single-gender courts, mixed doubles teams, or ignore gender
   if (options.genderPriority) {
     selected = genderGroup(selected, activeCourts.length)
+  } else if (options.mixedDoubles) {
+    selected = mixedDoublesGroup(selected, activeCourts.length)
   }
 
   // Social Priority: rearrange to minimize repeat court-sharings
@@ -166,6 +168,30 @@ function genderGroup(selected, numCourts) {
   }
 
   return result.slice(0, selected.length)
+}
+
+function mixedDoublesGroup(selected, numCourts) {
+  // Arrange players so each team has one male and one female.
+  // Output order per court: [M, F, M, F] → makeCourt yields team1=[M,F], team2=[M,F].
+  // If genders are uneven, falls back to available players.
+  const males = [...selected.filter(p => p.gender === 'M')]
+  const females = [...selected.filter(p => p.gender === 'F')]
+  const others = [...selected.filter(p => p.gender !== 'M' && p.gender !== 'F')]
+
+  // Distribute non-binary/unknown into the smaller pool
+  for (const p of others) {
+    males.length <= females.length ? males.push(p) : females.push(p)
+  }
+
+  const result = []
+  while (result.length < numCourts * 4 && (males.length > 0 || females.length > 0)) {
+    result.push(males.length > 0 ? males.shift() : females.shift())   // team1[0]
+    result.push(females.length > 0 ? females.shift() : males.shift()) // team1[1]
+    result.push(males.length > 0 ? males.shift() : females.shift())   // team2[0]
+    result.push(females.length > 0 ? females.shift() : males.shift()) // team2[1]
+  }
+
+  return result
 }
 
 function socialPriorityArrange(selected, numCourts, priorRounds) {

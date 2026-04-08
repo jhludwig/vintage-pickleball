@@ -6,6 +6,12 @@ const EXCLUSIVE = [
   { key: 'riverMode', label: 'River' },
 ]
 
+const GENDER_OPTIONS = [
+  { key: 'genderPriority', label: 'Single Gender' },
+  { key: 'mixedDoubles', label: 'Mixed Doubles' },
+  { key: null, label: 'Any Gender' },
+]
+
 function Checkbox({ label, checked, onChange }) {
   return (
     <label className="flex items-center gap-1.5 text-xs text-stone-600 cursor-pointer whitespace-nowrap">
@@ -20,6 +26,14 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
     EXCLUSIVE.forEach(cb => onOptionChange(cb.key, false))
     if (checked) onOptionChange(key, true)
   }
+
+  function handleGender(key) {
+    onOptionChange('genderPriority', false)
+    onOptionChange('mixedDoubles', false)
+    if (key) onOptionChange(key, true)
+  }
+
+  const noGenderOption = !options.genderPriority && !options.mixedDoubles
 
   return (
     <div className="bg-stone-50 border-b border-stone-200 px-3 py-2 flex items-center gap-2 flex-wrap">
@@ -39,7 +53,7 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           onChange={e => onOptionChange('memberPriority', e.target.checked)}
         />
 
-        {/* Mutually exclusive group — visually boxed so it stays coherent when wrapping */}
+        {/* Mutually exclusive ordering group */}
         <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">
           {EXCLUSIVE.map(cb => (
             <Checkbox
@@ -51,11 +65,17 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           ))}
         </div>
 
-        <Checkbox
-          label="Gender Sorting"
-          checked={!!options.genderPriority}
-          onChange={e => onOptionChange('genderPriority', e.target.checked)}
-        />
+        {/* Mutually exclusive gender group */}
+        <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">
+          {GENDER_OPTIONS.map(opt => (
+            <Checkbox
+              key={opt.key ?? '__any__'}
+              label={opt.label}
+              checked={opt.key === null ? noGenderOption : !!options[opt.key]}
+              onChange={() => handleGender(opt.key)}
+            />
+          ))}
+        </div>
       </div>
 
       {canWrite && !isCommitted && (

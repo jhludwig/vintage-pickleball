@@ -153,6 +153,22 @@ describe('suggest — social priority', () => {
   })
 })
 
+describe('suggest — mixed doubles', () => {
+  it('places one male and one female on each team', () => {
+    const males = Array.from({ length: 4 }, (_, i) => makePlayer(`m${i}`, `M${i}`, 'member', '3.5', 'M'))
+    const females = Array.from({ length: 4 }, (_, i) => makePlayer(`f${i}`, `F${i}`, 'member', '3.5', 'F'))
+    const result = suggest({
+      participants: [...males, ...females],
+      activeCourts: [1, 2],
+      options: { mixedDoubles: true },
+    })
+    result.forEach(court => {
+      expect(court.team1.map(p => p.gender).sort()).toEqual(['F', 'M'])
+      expect(court.team2.map(p => p.gender).sort()).toEqual(['F', 'M'])
+    })
+  })
+})
+
 describe('suggest — river mode', () => {
   it('keeps court 1 winners on court 1', () => {
     const w1 = makePlayer('w1', 'W1', 'member', '4.5')
