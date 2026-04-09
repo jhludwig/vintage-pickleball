@@ -39,7 +39,7 @@ export default function CourtCard({ courtNumber, isActive, team1, team2, winning
                 return (
                   <div
                     key={p.id + '-' + suggestKey}
-                    style={{ animationDelay: `${index * 80}ms` }}
+                    style={isFlashing ? undefined : { animationDelay: `${index * 80}ms` }}
                     onClick={() => canWrite && !isCommitted && onPlayerClick(p)}
                     className={[
                       'text-xs truncate py-0.5 px-2 rounded-md border mb-0.5',
