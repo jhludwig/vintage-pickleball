@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import PlayerTable from '../features/players/PlayerTable'
@@ -7,6 +8,7 @@ import Spinner from '../components/Spinner'
 
 export default function Players() {
   const session = useAuth()
+  const navigate = useNavigate()
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null) // null | 'add' | player object
@@ -54,7 +56,7 @@ export default function Players() {
           </button>
         </div>
       )}
-      <PlayerTable players={players} onRowClick={p => session && setModal(p)} />
+      <PlayerTable players={players} onRowClick={p => navigate(`/players/${p.id}`)} />
       {modal && (
         <PlayerModal
           player={modal === 'add' ? null : modal}
