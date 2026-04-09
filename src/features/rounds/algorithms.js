@@ -54,7 +54,12 @@ export function suggest({ participants, activeCourts, options = {}, priorRounds 
 
   if (options.randomMode) {
     const slots = activeCourts.length * 4
-    const selected = shuffle([...pool]).slice(0, slots)
+    let selected = shuffle([...pool]).slice(0, slots)
+    if (options.genderPriority) {
+      selected = genderGroup(selected, activeCourts.length)
+    } else if (options.mixedDoubles) {
+      selected = mixedDoublesGroup(selected, activeCourts.length)
+    }
     return activeCourts.map((courtNum, i) => makeCourt(courtNum, selected.slice(i * 4, i * 4 + 4)))
   }
 

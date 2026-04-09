@@ -121,6 +121,21 @@ describe('suggest — gender priority', () => {
       expect(genders.size).toBe(1)
     })
   })
+
+  it('respects gender priority when combined with random mode', () => {
+    const males = Array.from({ length: 12 }, (_, i) => makePlayer(`m${i}`, `M${i}`, 'member', '3.5', 'M'))
+    const females = Array.from({ length: 12 }, (_, i) => makePlayer(`f${i}`, `F${i}`, 'member', '3.5', 'F'))
+    const result = suggest({
+      participants: [...males, ...females],
+      activeCourts: [1, 2, 3, 4, 5, 6],
+      options: { randomMode: true, genderPriority: true },
+    })
+    result.forEach(court => {
+      const courtPlayers = [...court.team1, ...court.team2]
+      const genders = new Set(courtPlayers.map(p => p.gender))
+      expect(genders.size).toBe(1)
+    })
+  })
 })
 
 describe('suggest — social priority', () => {
