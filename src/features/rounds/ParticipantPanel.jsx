@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { fullName } from '../../lib/playerName'
+import { fullName, ratingTierClass } from '../../lib/playerName'
 
 const EMPTY_GUEST = { first_name: '', last_name: '', gender: '', ranking: '' }
 
@@ -83,7 +83,7 @@ export default function ParticipantPanel({ players, selected, onChange, canWrite
       <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-3 pt-2">Participants</div>
       <div className="flex-1 overflow-y-auto px-1 space-y-0.5">
         {sorted.map(p => (
-          <label key={p.id} className="flex items-center gap-2 cursor-pointer px-1 py-1 rounded-lg hover:bg-stone-50 transition-colors">
+          <label key={p.id} className={`flex items-center gap-2 cursor-pointer px-1 py-1 rounded-lg hover:bg-stone-50 transition-colors border-l-4 ${ratingTierClass(p.ranking)}`}>
             <input
               type="checkbox"
               checked={selected.has(p.id)}
