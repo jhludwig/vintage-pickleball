@@ -1,4 +1,4 @@
-import { fullName } from '../../lib/playerName'
+import { fullName, ratingTierClass } from '../../lib/playerName'
 
 export default function CourtCard({ courtNumber, isActive, team1, team2, winningTeam, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, suggestKey, flashedIds, swapTargetId }) {
   return (
@@ -42,9 +42,10 @@ export default function CourtCard({ courtNumber, isActive, team1, team2, winning
                     style={isFlashing ? undefined : { animationDelay: `${index * 80}ms` }}
                     onClick={() => canWrite && !isCommitted && onPlayerClick(p)}
                     className={[
-                      'text-xs truncate py-0.5 px-2 rounded-md border mb-0.5',
+                      'text-xs truncate py-0.5 px-2 rounded-md border border-l-4 mb-0.5',
                       isFlashing ? 'animate-flash-gold' : 'animate-fade-in-up',
                       team === 1 ? 'bg-white/70 border-blue-100' : 'bg-white/70 border-orange-100',
+                      ratingTierClass(p.ranking),
                       isSwapTarget ? 'ring-2 ring-amber-400 ring-offset-1' : '',
                       canWrite && !isCommitted ? 'cursor-pointer hover:bg-white hover:text-emerald-700' : 'text-stone-700',
                     ].filter(Boolean).join(' ')}
