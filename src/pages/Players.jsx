@@ -11,7 +11,7 @@ export default function Players() {
   const navigate = useNavigate()
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(null) // null | 'add' | player object
+  const [modal, setModal] = useState(null) // null | 'add'
 
   const loadPlayers = useCallback(async () => {
     const { data, error } = await supabase.from('players').select('*').order('last_name').order('first_name')
@@ -24,20 +24,8 @@ export default function Players() {
 
   async function handleSave(form) {
     const { id, created_at, ...fields } = form
-    let error
-    if (id) {
-      ({ error } = await supabase.from('players').update(fields).eq('id', id))
-    } else {
-      ({ error } = await supabase.from('players').insert(fields))
-    }
+    const { error } = await supabase.from('players').insert(fields)
     if (error) { alert(`Failed to save: ${error.message}`); return }
-    setModal(null)
-    loadPlayers()
-  }
-
-  async function handleDelete(id) {
-    const { error } = await supabase.from('players').delete().eq('id', id)
-    if (error) { alert(`Failed to delete: ${error.message}`); return }
     setModal(null)
     loadPlayers()
   }
@@ -59,9 +47,8 @@ export default function Players() {
       <PlayerTable players={players} onRowClick={p => navigate(`/players/${p.id}`)} />
       {modal && (
         <PlayerModal
-          player={modal === 'add' ? null : modal}
+          player={null}
           onSave={handleSave}
-          onDelete={handleDelete}
           onClose={() => setModal(null)}
         />
       )}
