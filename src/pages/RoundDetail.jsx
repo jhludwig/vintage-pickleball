@@ -25,6 +25,8 @@ export default function RoundDetail() {
   const [draftAssignments, setDraftAssignments] = useState([])
   const [options, setOptions] = useState({})
   const [swapTarget, setSwapTarget] = useState(null)
+  const [suggestKey, setSuggestKey] = useState(0)
+  const [flashedIds, setFlashedIds] = useState(new Set())
   const [loading, setLoading] = useState(true)
   const [priorRounds, setPriorRounds] = useState([])
   const [priorRoundResult, setPriorRoundResult] = useState(null)
@@ -156,6 +158,7 @@ export default function RoundDetail() {
     const draft = suggest({ participants: participatingPlayers, activeCourts, options, priorRounds, priorRoundResult })
     setDraftAssignments(draft)
     setSwapTarget(null)
+    setSuggestKey(k => k + 1)
   }
 
   function handlePlayerClick(player) {
@@ -174,6 +177,8 @@ export default function RoundDetail() {
       team1: court.team1.map(p => p.id === swapTarget.id ? player : p.id === player.id ? swapTarget : p),
       team2: court.team2.map(p => p.id === swapTarget.id ? player : p.id === player.id ? swapTarget : p),
     })))
+    setFlashedIds(new Set([swapTarget.id, player.id]))
+    setTimeout(() => setFlashedIds(new Set()), 700)
     setSwapTarget(null)
   }
 
@@ -279,6 +284,9 @@ export default function RoundDetail() {
           isCommitted={round?.is_committed}
           canWrite={canWrite}
           holdingPen={holdingPen}
+          suggestKey={suggestKey}
+          flashedIds={flashedIds}
+          swapTargetId={swapTarget?.id ?? null}
         />
       </div>
 
