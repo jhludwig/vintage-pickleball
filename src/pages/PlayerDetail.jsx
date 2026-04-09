@@ -19,57 +19,63 @@ export default function PlayerDetail() {
   const season = currentSeasonRange()
 
   const load = useCallback(async () => {
-    const [
-      { data: playerData },
-      { data: participations },
-      { data: assignments },
-    ] = await Promise.all([
-      supabase.from('players').select('*').eq('id', playerId).single(),
-      supabase
-        .from('round_participants')
-        .select('round_id, rounds(event_id, events(date))')
-        .eq('player_id', playerId),
-      supabase
-        .from('court_assignments')
-        .select('round_id, court_number, team, rounds(event_id, events(date))')
-        .eq('player_id', playerId),
-    ])
+    try {
+      const [
+        { data: playerData, error: playerError },
+        { data: participations, error: partError },
+        { data: assignments, error: asnError },
+      ] = await Promise.all([
+        supabase.from('players').select('*').eq('id', playerId).single(),
+        supabase
+          .from('round_participants')
+          .select('round_id, rounds(event_id, events(date))')
+          .eq('player_id', playerId),
+        supabase
+          .from('court_assignments')
+          .select('round_id, court_number, team, rounds(event_id, events(date))')
+          .eq('player_id', playerId),
+      ])
+      if (playerError) console.error('Failed to load player:', playerError)
+      if (partError) console.error('Failed to load participations:', partError)
+      if (asnError) console.error('Failed to load assignments:', asnError)
 
-    const inSeason = date => date >= season.start && date <= season.end
+      const inSeason = date => date >= season.start && date <= season.end
 
-    const seasonParticipations = (participations ?? []).filter(
-      p => p.rounds?.events?.date && inSeason(p.rounds.events.date)
-    )
-    const seasonAssignments = (assignments ?? []).filter(
-      a => a.rounds?.events?.date && inSeason(a.rounds.events.date)
-    )
+      const seasonParticipations = (participations ?? []).filter(
+        p => p.rounds?.events?.date && inSeason(p.rounds.events.date)
+      )
+      const seasonAssignments = (assignments ?? []).filter(
+        a => a.rounds?.events?.date && inSeason(a.rounds.events.date)
+      )
 
-    const eventsAttended = new Set(seasonParticipations.map(p => p.rounds.event_id)).size
-    const gamesPlayed = seasonAssignments.length
+      const eventsAttended = new Set(seasonParticipations.map(p => p.rounds.event_id)).size
+      const gamesPlayed = seasonAssignments.length
 
-    let wins = 0
-    if (seasonAssignments.length > 0) {
-      const roundIds = [...new Set(seasonAssignments.map(a => a.round_id))]
-      const { data: results } = await supabase
-        .from('court_results')
-        .select('round_id, court_number, winning_team')
-        .in('round_id', roundIds)
+      let wins = 0
+      if (seasonAssignments.length > 0) {
+        const roundIds = [...new Set(seasonAssignments.map(a => a.round_id))]
+        const { data: results } = await supabase
+          .from('court_results')
+          .select('round_id, court_number, winning_team')
+          .in('round_id', roundIds)
 
-      const resultMap = {}
-      for (const r of (results ?? [])) {
-        resultMap[`${r.round_id}:${r.court_number}`] = r.winning_team
+        const resultMap = {}
+        for (const r of (results ?? [])) {
+          resultMap[`${r.round_id}:${r.court_number}`] = r.winning_team
+        }
+
+        wins = seasonAssignments.filter(a =>
+          resultMap[`${a.round_id}:${a.court_number}`] === a.team
+        ).length
       }
 
-      wins = seasonAssignments.filter(a =>
-        resultMap[`${a.round_id}:${a.court_number}`] === a.team
-      ).length
+      const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
+
+      setPlayer(playerData)
+      setStats({ eventsAttended, gamesPlayed, wins, winRate })
+    } finally {
+      setLoading(false)
     }
-
-    const winRate = gamesPlayed > 0 ? `${Math.round((wins / gamesPlayed) * 100)}%` : '—'
-
-    setPlayer(playerData)
-    setStats({ eventsAttended, gamesPlayed, wins, winRate })
-    setLoading(false)
   }, [playerId, season.start, season.end])
 
   useEffect(() => { load() }, [load])
