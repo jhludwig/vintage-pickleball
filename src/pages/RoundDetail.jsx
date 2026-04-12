@@ -30,6 +30,7 @@ export default function RoundDetail() {
   const [loading, setLoading] = useState(true)
   const [priorRounds, setPriorRounds] = useState([])
   const [priorRoundResult, setPriorRoundResult] = useState(null)
+  const [sittingOutCounts, setSittingOutCounts] = useState({})
 
   const load = useCallback(async () => {
     const [
@@ -76,10 +77,16 @@ export default function RoundDetail() {
     // Build prior rounds data for social priority and river mode
     const priorRoundIds = (priorRoundRows ?? []).map(r => r.id)
     if (priorRoundIds.length > 0) {
-      const { data: priorAsn } = await supabase
-        .from('court_assignments')
-        .select('round_id, court_number, player_id, team, players(*)')
-        .in('round_id', priorRoundIds)
+      const [{ data: priorAsn }, { data: priorParts }] = await Promise.all([
+        supabase
+          .from('court_assignments')
+          .select('round_id, court_number, player_id, team, players(*)')
+          .in('round_id', priorRoundIds),
+        supabase
+          .from('round_participants')
+          .select('round_id, player_id')
+          .in('round_id', priorRoundIds),
+      ])
 
       // priorRounds: shape for social priority - player IDs per court
       const built = priorRoundIds.map(rid => {
@@ -112,9 +119,25 @@ export default function RoundDetail() {
       } else {
         setPriorRoundResult(null)
       }
+
+      // Compute sitting-out counts for rotation priority
+      const counts = {}
+      for (const roundId of priorRoundIds) {
+        const roundParts = (priorParts ?? []).filter(p => p.round_id === roundId)
+        const roundAssigned = new Set(
+          (priorAsn ?? []).filter(a => a.round_id === roundId).map(a => a.player_id)
+        )
+        for (const p of roundParts) {
+          if (!roundAssigned.has(p.player_id)) {
+            counts[p.player_id] = (counts[p.player_id] ?? 0) + 1
+          }
+        }
+      }
+      setSittingOutCounts(counts)
     } else {
       setPriorRounds([])
       setPriorRoundResult(null)
+      setSittingOutCounts({})
     }
 
     setLoading(false)
@@ -155,7 +178,7 @@ export default function RoundDetail() {
   function handleSuggest() {
     const activeCourts = courts.filter(c => c.is_active).map(c => c.court_number)
     const participatingPlayers = allPlayers.filter(p => participants.has(p.id))
-    const draft = suggest({ participants: participatingPlayers, activeCourts, options, priorRounds, priorRoundResult })
+    const draft = suggest({ participants: participatingPlayers, activeCourts, options, priorRounds, priorRoundResult, sittingOutCounts })
     setDraftAssignments(draft)
     setSwapTarget(null)
     setSuggestKey(k => k + 1)
