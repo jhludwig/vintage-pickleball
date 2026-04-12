@@ -41,11 +41,12 @@ function makeCourt(courtNumber, four) {
  * @param {object} input
  * @param {object[]} input.participants - checked players for this round
  * @param {number[]} input.activeCourts - e.g. [1,2,3]
- * @param {object} input.options - { memberPriority, genderPriority, rankPriority, socialPriority, mixedPriority, riverMode }
+ * @param {object} input.options - { memberPriority, genderPriority, rankPriority, socialPriority, mixedPriority, riverMode, rotationPriority }
  * @param {object[]} [input.priorRounds] - Committed rounds in the current event.
  *   Shape: [{ assignments: [{ court_number: number, players: string[] }] }]
  *   where players is an array of player ID strings.
  * @param {object} [input.priorRoundResult] - { [courtNum]: { winners: Player[], losers: Player[] } }
+ * @param {object} [input.sittingOutCounts] - { [playerId]: number } — how many prior rounds each player was a participant but not assigned. Higher = more sit-outs.
  * @returns {{ court_number: number, team1: object[], team2: object[] }[]}
  */
 export function suggest({ participants, activeCourts, options = {}, priorRounds = [], priorRoundResult = null, sittingOutCounts = {} }) {
@@ -68,6 +69,7 @@ export function suggest({ participants, activeCourts, options = {}, priorRounds 
   }
 
   if (options.riverMode && priorRoundResult) {
+    // rotationPriority is not applied in river mode — river ordering is determined by prior results
     return riverAssign(pool, activeCourts, priorRoundResult)
   }
 
