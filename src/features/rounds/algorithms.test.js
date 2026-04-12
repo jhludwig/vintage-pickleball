@@ -185,20 +185,19 @@ describe('suggest — mixed doubles', () => {
 })
 
 describe('suggest — rotationPriority', () => {
-  it('assigns sitters before non-sitters', () => {
-    // 4 players: 2 who sat out last round, 2 who didn't
-    // Only 1 active court (4 slots) — both sitters must appear
-    const sitter1 = makePlayer('s1', 'Sitter1', 'member', '3.5')
-    const sitter2 = makePlayer('s2', 'Sitter2', 'member', '3.5')
+  it('assigns sitters before non-sitters even when sitters appear last in input', () => {
+    // Sitters are at the END of participants — without rotation they'd be cut off
     const fresh1 = makePlayer('f1', 'Fresh1', 'member', '3.5')
     const fresh2 = makePlayer('f2', 'Fresh2', 'member', '3.5')
     const extra1 = makePlayer('e1', 'Extra1', 'member', '3.5')
     const extra2 = makePlayer('e2', 'Extra2', 'member', '3.5')
+    const sitter1 = makePlayer('s1', 'Sitter1', 'member', '3.5')
+    const sitter2 = makePlayer('s2', 'Sitter2', 'member', '3.5')
 
-    // 6 players, 4 slots — sitters should get priority
+    // 6 players, 4 slots — without rotation, s1/s2 at the end would be cut
     const sittingOutCounts = { s1: 1, s2: 1 }
     const result = suggest({
-      participants: [sitter1, sitter2, fresh1, fresh2, extra1, extra2],
+      participants: [fresh1, fresh2, extra1, extra2, sitter1, sitter2],
       activeCourts: [1],
       options: { rotationPriority: true },
       sittingOutCounts,
@@ -209,21 +208,30 @@ describe('suggest — rotationPriority', () => {
   })
 
   it('prioritizes player with higher sit-out count', () => {
-    // sitterA sat out 2 rounds, sitterB sat out 1, only 1 slot available
+    // sitterA (2 rounds) and sitterB (1 round) sit out; 3 fresh players
+    // 5 players, 4 slots — sitterA must appear; sitterB likely appears too
+    // Place sitters at end to ensure the sort is doing the work
+    const fresh0 = makePlayer('f0', 'F0', 'member', '3.5')
+    const fresh1 = makePlayer('f1', 'F1', 'member', '3.5')
+    const fresh2 = makePlayer('f2', 'F2', 'member', '3.5')
     const sitterA = makePlayer('a', 'A', 'member', '3.5')
     const sitterB = makePlayer('b', 'B', 'member', '3.5')
-    const fresh = Array.from({ length: 3 }, (_, i) => makePlayer(`f${i}`, `F${i}`, 'member', '3.5'))
 
     const sittingOutCounts = { a: 2, b: 1 }
-    // 5 players, 4 slots: a, b, f0, f1, f2 — a has highest count so must appear
     const result = suggest({
-      participants: [sitterA, sitterB, ...fresh],
+      participants: [fresh0, fresh1, fresh2, sitterA, sitterB],
       activeCourts: [1],
       options: { rotationPriority: true },
       sittingOutCounts,
     })
     const assigned = allPlayers(result).map(p => p.id)
+    // Both sitters must be assigned (only 5 players, 4 slots, 2 sitters → both fit)
     expect(assigned).toContain('a')
+    expect(assigned).toContain('b')
+    // The one excluded player must be a fresh player, not a sitter
+    const excluded = ['f0', 'f1', 'f2', 'a', 'b'].filter(id => !assigned.includes(id))
+    expect(excluded).toHaveLength(1)
+    expect(['f0', 'f1', 'f2']).toContain(excluded[0])
   })
 
   it('has no effect when sittingOutCounts is empty', () => {
@@ -235,6 +243,27 @@ describe('suggest — rotationPriority', () => {
       sittingOutCounts: {},
     })
     expect(allPlayers(result)).toHaveLength(4)
+  })
+
+  it('works with randomMode: sitters at end of shuffle still get assigned', () => {
+    // 6 players, 4 slots, sitters would be at worst position if not for rotation
+    const fresh = Array.from({ length: 4 }, (_, i) => makePlayer(`f${i}`, `F${i}`, 'member', '3.5'))
+    const sitter1 = makePlayer('s1', 'S1', 'member', '3.5')
+    const sitter2 = makePlayer('s2', 'S2', 'member', '3.5')
+    const sittingOutCounts = { s1: 1, s2: 1 }
+
+    // Run 10 times to account for shuffle randomness — sitters must always appear
+    for (let i = 0; i < 10; i++) {
+      const result = suggest({
+        participants: [...fresh, sitter1, sitter2],
+        activeCourts: [1],
+        options: { rotationPriority: true, randomMode: true },
+        sittingOutCounts,
+      })
+      const assigned = allPlayers(result).map(p => p.id)
+      expect(assigned).toContain('s1')
+      expect(assigned).toContain('s2')
+    }
   })
 })
 
