@@ -269,6 +269,16 @@ export default function RoundDetail() {
         <button onClick={() => navigate(`/events/${eventId}`)} className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors">← {event?.name}</button>
         <span className="text-sm text-stone-400">/</span>
         <span className="text-sm font-semibold text-stone-700">Round {round?.round_number}</span>
+        {round?.is_committed && (
+          <a
+            href={`#/events/${eventId}/rounds/${roundId}/display`}
+            target="_blank"
+            rel="noreferrer"
+            className="ml-auto text-xs text-stone-400 hover:text-emerald-600 transition-colors"
+          >
+            📺 Display
+          </a>
+        )}
       </div>
 
       <AlgorithmBar
