@@ -188,23 +188,26 @@ export default function RoundDetail() {
     if (round?.is_committed) return
 
     if (player.player_type === 'pro') {
-      setSwapTarget(null)
-      setDraftAssignments(prev => {
-        const alreadyAssigned = prev.some(
-          c => c.team1.some(p => p.id === player.id) || c.team2.some(p => p.id === player.id)
-        )
-        if (alreadyAssigned) return prev
-        const target = prev.find(c => c.team1.length + c.team2.length < 4)
-        if (!target) return prev
-        return prev.map(c => {
-          if (c.court_number !== target.court_number) return c
-          if (c.team1.length <= c.team2.length) {
-            return { ...c, team1: [...c.team1, player] }
-          }
-          return { ...c, team2: [...c.team2, player] }
+      const alreadyAssigned = draftAssignments.some(
+        c => c.team1.some(p => p.id === player.id) || c.team2.some(p => p.id === player.id)
+      )
+      if (!alreadyAssigned) {
+        // Pro is in holding pen — auto-assign to first underfull court
+        setSwapTarget(null)
+        setDraftAssignments(prev => {
+          const target = prev.find(c => c.team1.length + c.team2.length < 4)
+          if (!target) return prev
+          return prev.map(c => {
+            if (c.court_number !== target.court_number) return c
+            if (c.team1.length <= c.team2.length) {
+              return { ...c, team1: [...c.team1, player] }
+            }
+            return { ...c, team2: [...c.team2, player] }
+          })
         })
-      })
-      return
+        return
+      }
+      // Pro is already on a court — fall through to normal swap behavior
     }
 
     if (!swapTarget) {
