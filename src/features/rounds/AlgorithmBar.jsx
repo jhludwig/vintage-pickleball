@@ -53,6 +53,12 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           onChange={e => onOptionChange('memberPriority', e.target.checked)}
         />
 
+        <Checkbox
+          label="Rotation"
+          checked={!!options.rotationPriority}
+          onChange={e => onOptionChange('rotationPriority', e.target.checked)}
+        />
+
         {/* Mutually exclusive ordering group */}
         <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">
           {EXCLUSIVE.map(cb => (
