@@ -1,0 +1,18 @@
+{
+  "name": "VPickle",
+  "short_name": "VPickle",
+  "description": "Vintage Club Pickleball court manager",
+  "start_url": "/vintage-pickleball/",
+  "scope": "/vintage-pickleball/",
+  "display": "standalone",
+  "background_color": "#1c1917",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "/vintage-pickleball/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
