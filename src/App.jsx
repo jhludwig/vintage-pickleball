@@ -6,6 +6,7 @@ import PlayerDetail from './pages/PlayerDetail'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
 import RoundDetail from './pages/RoundDetail'
+import Leaderboard from './pages/Leaderboard'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="events" element={<Events />} />
         <Route path="events/:eventId" element={<EventDetail />} />
         <Route path="events/:eventId/rounds/:roundId" element={<RoundDetail />} />
+        <Route path="leaderboard" element={<Leaderboard />} />
       </Route>
     </Routes>
   )

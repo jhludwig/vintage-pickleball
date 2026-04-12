@@ -63,6 +63,15 @@ export default function Layout() {
           <span className="text-xl mb-0.5">📅</span>
           Events
         </NavLink>
+        <NavLink
+          to="/leaderboard"
+          className={({ isActive }) =>
+            `flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors ${isActive ? 'text-emerald-600' : 'text-stone-400'}`
+          }
+        >
+          <span className="text-xl mb-0.5">🏆</span>
+          Leaderboard
+        </NavLink>
       </nav>
     </div>
   )
