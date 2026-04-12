@@ -14,77 +14,93 @@ export default function Leaderboard() {
       const { start, end, label } = currentSeasonRange()
       setSeasonLabel(label)
 
-      const { data: events } = await supabase
-        .from('events')
-        .select('id')
-        .gte('date', start)
-        .lte('date', end)
+      try {
+        const { data: events, error: evErr } = await supabase
+          .from('events')
+          .select('id')
+          .gte('date', start)
+          .lte('date', end)
 
-      const eventIds = (events ?? []).map(e => e.id)
-      if (eventIds.length === 0) { setRows([]); return }
+        if (evErr) throw evErr
 
-      const { data: rounds } = await supabase
-        .from('rounds')
-        .select('id')
-        .in('event_id', eventIds)
-        .eq('is_committed', true)
+        const eventIds = (events ?? []).map(e => e.id)
+        if (eventIds.length === 0) { setRows([]); return }
 
-      const roundIds = (rounds ?? []).map(r => r.id)
-      if (roundIds.length === 0) { setRows([]); return }
+        const { data: rounds, error: rdErr } = await supabase
+          .from('rounds')
+          .select('id')
+          .in('event_id', eventIds)
+          .eq('is_committed', true)
 
-      const [{ data: assignments }, { data: results }] = await Promise.all([
-        supabase
-          .from('court_assignments')
-          .select('round_id, court_number, player_id, team, players(id, first_name, last_name)')
-          .in('round_id', roundIds),
-        supabase
-          .from('court_results')
-          .select('round_id, court_number, winning_team')
-          .in('round_id', roundIds),
-      ])
+        if (rdErr) throw rdErr
 
-      // Compute games played and player map
-      const gamesPlayed = {}
-      const wins = {}
-      const playerMap = {}
+        const roundIds = (rounds ?? []).map(r => r.id)
+        if (roundIds.length === 0) { setRows([]); return }
 
-      for (const a of (assignments ?? [])) {
-        if (!a.players) continue
-        gamesPlayed[a.player_id] = (gamesPlayed[a.player_id] ?? 0) + 1
-        playerMap[a.player_id] = a.players
-      }
+        const [{ data: assignments, error: asnErr }, { data: results, error: resErr }] = await Promise.all([
+          supabase
+            .from('court_assignments')
+            .select('round_id, court_number, player_id, team, players(id, first_name, last_name)')
+            .in('round_id', roundIds),
+          supabase
+            .from('court_results')
+            .select('round_id, court_number, winning_team')
+            .in('round_id', roundIds),
+        ])
 
-      // Compute wins
-      for (const result of (results ?? [])) {
-        const winners = (assignments ?? []).filter(
-          a =>
-            a.round_id === result.round_id &&
-            a.court_number === result.court_number &&
-            a.team === result.winning_team
-        )
-        for (const a of winners) {
-          wins[a.player_id] = (wins[a.player_id] ?? 0) + 1
+        if (asnErr) throw asnErr
+        if (resErr) throw resErr
+
+        // Compute games played and player map
+        const gamesPlayed = {}
+        const playerMap = {}
+
+        for (const a of (assignments ?? [])) {
+          if (!a.players) continue
+          gamesPlayed[a.player_id] = (gamesPlayed[a.player_id] ?? 0) + 1
+          playerMap[a.player_id] = a.players
         }
+
+        // Build a lookup for winning assignments: "roundId:courtNum:team" -> [playerIds]
+        const winKey = (roundId, courtNumber, team) => `${roundId}:${courtNumber}:${team}`
+        const winnersByKey = {}
+        for (const a of (assignments ?? [])) {
+          const k = winKey(a.round_id, a.court_number, a.team)
+          if (!winnersByKey[k]) winnersByKey[k] = []
+          winnersByKey[k].push(a.player_id)
+        }
+
+        // Compute wins
+        const wins = {}
+        for (const result of (results ?? [])) {
+          const k = winKey(result.round_id, result.court_number, result.winning_team)
+          for (const pid of (winnersByKey[k] ?? [])) {
+            wins[pid] = (wins[pid] ?? 0) + 1
+          }
+        }
+
+        // Median filter
+        const gameCounts = Object.values(gamesPlayed).sort((a, b) => a - b)
+        const median = gameCounts[Math.floor(gameCounts.length / 2)] ?? 1
+        const minGames = Math.max(1, Math.floor(median / 2))
+        setThreshold(minGames)
+
+        // Build and sort rows
+        const built = Object.keys(gamesPlayed)
+          .filter(pid => gamesPlayed[pid] >= minGames)
+          .map(pid => ({
+            player: playerMap[pid],
+            games: gamesPlayed[pid],
+            wins: wins[pid] ?? 0,
+            winRate: (wins[pid] ?? 0) / gamesPlayed[pid],
+          }))
+          .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
+
+        setRows(built)
+      } catch (err) {
+        console.error('Failed to load leaderboard:', err)
+        setRows([])
       }
-
-      // Median filter
-      const gameCounts = Object.values(gamesPlayed).sort((a, b) => a - b)
-      const median = gameCounts[Math.floor(gameCounts.length / 2)] ?? 1
-      const minGames = Math.max(1, Math.floor(median / 2))
-      setThreshold(minGames)
-
-      // Build and sort rows
-      const built = Object.keys(gamesPlayed)
-        .filter(pid => gamesPlayed[pid] >= minGames)
-        .map(pid => ({
-          player: playerMap[pid],
-          games: gamesPlayed[pid],
-          wins: wins[pid] ?? 0,
-          winRate: (wins[pid] ?? 0) / gamesPlayed[pid],
-        }))
-        .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
-
-      setRows(built)
     }
 
     load()
