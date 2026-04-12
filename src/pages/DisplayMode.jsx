@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { fullName } from '../lib/playerName'
@@ -6,45 +6,65 @@ import { fullName } from '../lib/playerName'
 export default function DisplayMode() {
   const { eventId, roundId } = useParams()
   const [data, setData] = useState(null)
+  const [error, setError] = useState(null)
 
-  async function load() {
-    const [
-      { data: rd },
-      { data: ev },
-      { data: assignments },
-      { data: results },
-    ] = await Promise.all([
-      supabase.from('rounds').select('*').eq('id', roundId).single(),
-      supabase.from('events').select('*').eq('id', eventId).single(),
-      supabase.from('court_assignments').select('*, players(*)').eq('round_id', roundId),
-      supabase.from('court_results').select('*').eq('round_id', roundId),
-    ])
+  const load = useCallback(async () => {
+    try {
+      const [
+        { data: rd, error: rdErr },
+        { data: ev, error: evErr },
+        { data: assignments, error: asnErr },
+        { data: results, error: resErr },
+      ] = await Promise.all([
+        supabase.from('rounds').select('round_number, is_committed').eq('id', roundId).single(),
+        supabase.from('events').select('name').eq('id', eventId).single(),
+        supabase.from('court_assignments').select('*, players(*)').eq('round_id', roundId),
+        supabase.from('court_results').select('*').eq('round_id', roundId),
+      ])
 
-    const courts = []
-    for (let i = 1; i <= 8; i++) {
-      const courtPlayers = (assignments ?? []).filter(a => a.court_number === i)
-      if (courtPlayers.length > 0) {
-        courts.push({
-          court_number: i,
-          team1: courtPlayers.filter(a => a.team === 1).map(a => a.players),
-          team2: courtPlayers.filter(a => a.team === 2).map(a => a.players),
-        })
+      if (rdErr) throw rdErr
+      if (evErr) throw evErr
+      if (asnErr) throw asnErr
+      if (resErr) throw resErr
+
+      const courts = []
+      for (let i = 1; i <= 8; i++) {
+        const courtPlayers = (assignments ?? []).filter(a => a.court_number === i)
+        if (courtPlayers.length > 0) {
+          courts.push({
+            court_number: i,
+            team1: courtPlayers.filter(a => a.team === 1).map(a => a.players),
+            team2: courtPlayers.filter(a => a.team === 2).map(a => a.players),
+          })
+        }
       }
-    }
 
-    setData({ round: rd, event: ev, courts, results: results ?? [] })
-  }
+      setError(null)
+      setData({ round: rd, event: ev, courts, results: results ?? [] })
+    } catch (err) {
+      console.error('DisplayMode load failed:', err)
+      setError('Failed to load data. Retrying…')
+    }
+  }, [roundId, eventId])
 
   useEffect(() => {
     load()
     const interval = setInterval(load, 15000)
     return () => clearInterval(interval)
-  }, [roundId, eventId])
+  }, [load])
+
+  if (error && !data) {
+    return (
+      <div className="min-h-screen bg-stone-900 flex items-center justify-center">
+        <div className="text-red-400 text-lg">{error}</div>
+      </div>
+    )
+  }
 
   if (!data) {
     return (
       <div className="min-h-screen bg-stone-900 flex items-center justify-center">
-        <div className="text-stone-400 text-lg">Loading...</div>
+        <div className="text-stone-400 text-lg">Loading…</div>
       </div>
     )
   }
@@ -55,7 +75,9 @@ export default function DisplayMode() {
     return results.find(r => r.court_number === courtNumber)?.winning_team ?? null
   }
 
-  const gridClass = courts.length <= 2
+  const gridClass = courts.length === 1
+    ? 'grid-cols-1 max-w-sm mx-auto w-full'
+    : courts.length <= 2
     ? 'grid-cols-2'
     : courts.length === 3
     ? 'grid-cols-3'
