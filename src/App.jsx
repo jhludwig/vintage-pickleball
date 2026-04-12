@@ -7,6 +7,7 @@ import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
 import RoundDetail from './pages/RoundDetail'
 import Leaderboard from './pages/Leaderboard'
+import DisplayMode from './pages/DisplayMode'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="events/:eventId/rounds/:roundId" element={<RoundDetail />} />
         <Route path="leaderboard" element={<Leaderboard />} />
       </Route>
+      <Route path="events/:eventId/rounds/:roundId/display" element={<DisplayMode />} />
     </Routes>
   )
 }
