@@ -184,6 +184,60 @@ describe('suggest — mixed doubles', () => {
   })
 })
 
+describe('suggest — rotationPriority', () => {
+  it('assigns sitters before non-sitters', () => {
+    // 4 players: 2 who sat out last round, 2 who didn't
+    // Only 1 active court (4 slots) — both sitters must appear
+    const sitter1 = makePlayer('s1', 'Sitter1', 'member', '3.5')
+    const sitter2 = makePlayer('s2', 'Sitter2', 'member', '3.5')
+    const fresh1 = makePlayer('f1', 'Fresh1', 'member', '3.5')
+    const fresh2 = makePlayer('f2', 'Fresh2', 'member', '3.5')
+    const extra1 = makePlayer('e1', 'Extra1', 'member', '3.5')
+    const extra2 = makePlayer('e2', 'Extra2', 'member', '3.5')
+
+    // 6 players, 4 slots — sitters should get priority
+    const sittingOutCounts = { s1: 1, s2: 1 }
+    const result = suggest({
+      participants: [sitter1, sitter2, fresh1, fresh2, extra1, extra2],
+      activeCourts: [1],
+      options: { rotationPriority: true },
+      sittingOutCounts,
+    })
+    const assigned = allPlayers(result).map(p => p.id)
+    expect(assigned).toContain('s1')
+    expect(assigned).toContain('s2')
+  })
+
+  it('prioritizes player with higher sit-out count', () => {
+    // sitterA sat out 2 rounds, sitterB sat out 1, only 1 slot available
+    const sitterA = makePlayer('a', 'A', 'member', '3.5')
+    const sitterB = makePlayer('b', 'B', 'member', '3.5')
+    const fresh = Array.from({ length: 3 }, (_, i) => makePlayer(`f${i}`, `F${i}`, 'member', '3.5'))
+
+    const sittingOutCounts = { a: 2, b: 1 }
+    // 5 players, 4 slots: a, b, f0, f1, f2 — a has highest count so must appear
+    const result = suggest({
+      participants: [sitterA, sitterB, ...fresh],
+      activeCourts: [1],
+      options: { rotationPriority: true },
+      sittingOutCounts,
+    })
+    const assigned = allPlayers(result).map(p => p.id)
+    expect(assigned).toContain('a')
+  })
+
+  it('has no effect when sittingOutCounts is empty', () => {
+    const players = Array.from({ length: 4 }, (_, i) => makePlayer(`p${i}`, `P${i}`, 'member', '3.5'))
+    const result = suggest({
+      participants: players,
+      activeCourts: [1],
+      options: { rotationPriority: true },
+      sittingOutCounts: {},
+    })
+    expect(allPlayers(result)).toHaveLength(4)
+  })
+})
+
 describe('suggest — river mode', () => {
   it('keeps court 1 winners on court 1', () => {
     const w1 = makePlayer('w1', 'W1', 'member', '4.5')

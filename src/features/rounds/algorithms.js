@@ -48,13 +48,17 @@ function makeCourt(courtNumber, four) {
  * @param {object} [input.priorRoundResult] - { [courtNum]: { winners: Player[], losers: Player[] } }
  * @returns {{ court_number: number, team1: object[], team2: object[] }[]}
  */
-export function suggest({ participants, activeCourts, options = {}, priorRounds = [], priorRoundResult = null }) {
+export function suggest({ participants, activeCourts, options = {}, priorRounds = [], priorRoundResult = null, sittingOutCounts = {} }) {
   // Pros are never assigned by algorithm
   const pool = participants.filter(p => p.player_type !== 'pro')
 
   if (options.randomMode) {
     const slots = activeCourts.length * 4
-    let selected = shuffle([...pool]).slice(0, slots)
+    let base = shuffle([...pool])
+    if (options.rotationPriority) {
+      base = rotationPrioritySort(base, sittingOutCounts)
+    }
+    let selected = base.slice(0, slots)
     if (options.genderPriority) {
       selected = genderGroup(selected, activeCourts.length)
     } else if (options.mixedDoubles) {
@@ -67,10 +71,18 @@ export function suggest({ participants, activeCourts, options = {}, priorRounds 
     return riverAssign(pool, activeCourts, priorRoundResult)
   }
 
-  return standardAssign(pool, activeCourts, options, priorRounds)
+  return standardAssign(pool, activeCourts, options, priorRounds, sittingOutCounts)
 }
 
-function standardAssign(pool, activeCourts, options, priorRounds) {
+function rotationPrioritySort(pool, sittingOutCounts) {
+  const sitters = pool
+    .filter(p => (sittingOutCounts[p.id] ?? 0) > 0)
+    .sort((a, b) => (sittingOutCounts[b.id] ?? 0) - (sittingOutCounts[a.id] ?? 0))
+  const others = pool.filter(p => (sittingOutCounts[p.id] ?? 0) === 0)
+  return [...sitters, ...others]
+}
+
+function standardAssign(pool, activeCourts, options, priorRounds, sittingOutCounts = {}) {
   const slots = activeCourts.length * 4
   let sorted = [...pool]
 
@@ -97,6 +109,11 @@ function standardAssign(pool, activeCourts, options, priorRounds) {
   // Mixed Priority: tier by rank, shuffle within tiers
   if (options.mixedPriority) {
     sorted = mixedPrioritySort(sorted, activeCourts.length)
+  }
+
+  // Rotation Priority: players who sat out come first
+  if (options.rotationPriority) {
+    sorted = rotationPrioritySort(sorted, sittingOutCounts)
   }
 
   // Take only as many players as fit
