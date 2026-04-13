@@ -40,7 +40,7 @@ export default function Leaderboard() {
         const [{ data: assignments, error: asnErr }, { data: results, error: resErr }] = await Promise.all([
           supabase
             .from('court_assignments')
-            .select('round_id, court_number, player_id, team, players(id, first_name, last_name)')
+            .select('round_id, court_number, player_id, team, players(id, first_name, last_name, player_type)')
             .in('round_id', roundIds),
           supabase
             .from('court_results')
@@ -57,6 +57,7 @@ export default function Leaderboard() {
 
         for (const a of (assignments ?? [])) {
           if (!a.players) continue
+          if (a.players.player_type === 'pro') continue
           gamesPlayed[a.player_id] = (gamesPlayed[a.player_id] ?? 0) + 1
           playerMap[a.player_id] = a.players
         }
