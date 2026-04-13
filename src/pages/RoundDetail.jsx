@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { suggest } from '../features/rounds/algorithms'
@@ -12,6 +12,7 @@ import Spinner from '../components/Spinner'
 export default function RoundDetail() {
   const { eventId, roundId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const session = useAuth()
   const canWrite = !!session
 
@@ -22,7 +23,7 @@ export default function RoundDetail() {
   const [participants, setParticipants] = useState(new Set())
   const [committedAssignments, setCommittedAssignments] = useState([])
   const [results, setResults] = useState([])
-  const [draftAssignments, setDraftAssignments] = useState([])
+  const [draftAssignments, setDraftAssignments] = useState(location.state?.draftAssignments ?? [])
   const [options, setOptions] = useState({})
   const [swapTarget, setSwapTarget] = useState(null)
   const [suggestKey, setSuggestKey] = useState(0)
@@ -265,6 +266,75 @@ export default function RoundDetail() {
     load()
   }
 
+  async function handleNextRound(algorithm) {
+    const { data: existingRounds } = await supabase
+      .from('rounds').select('round_number').eq('event_id', eventId)
+    const nextNum = existingRounds && existingRounds.length > 0
+      ? Math.max(...existingRounds.map(r => r.round_number)) + 1
+      : round.round_number + 1
+
+    const { data: newRound, error: roundErr } = await supabase
+      .from('rounds').insert({ event_id: eventId, round_number: nextNum }).select().single()
+    if (roundErr) { alert(`Failed to create round: ${roundErr.message}`); return }
+
+    const { error: courtsErr } = await supabase.from('active_courts').insert(
+      courts.map(c => ({ round_id: newRound.id, court_number: c.court_number, is_active: c.is_active }))
+    )
+    if (courtsErr) { alert(`Failed to create courts: ${courtsErr.message}`); return }
+
+    if (participants.size > 0) {
+      const { error: partsErr } = await supabase.from('round_participants').insert(
+        [...participants].map(pid => ({ round_id: newRound.id, player_id: pid }))
+      )
+      if (partsErr) { alert(`Failed to copy participants: ${partsErr.message}`); return }
+    }
+
+    // Build current round's result for river mode
+    const currentRoundResult = {}
+    for (const result of results) {
+      const court = committedAssignments.find(c => c.court_number === result.court_number)
+      if (court) {
+        currentRoundResult[result.court_number] = {
+          winners: result.winning_team === 1 ? court.team1 : court.team2,
+          losers: result.winning_team === 1 ? court.team2 : court.team1,
+        }
+      }
+    }
+
+    // Include current round in social history
+    const currentRoundAsn = {
+      assignments: committedAssignments.map(c => ({
+        court_number: c.court_number,
+        players: [...c.team1, ...c.team2].map(p => p.id),
+      })),
+    }
+
+    const activeCourts = courts.filter(c => c.is_active).map(c => c.court_number)
+    const participatingPlayers = allPlayers.filter(p => participants.has(p.id))
+
+    let nextOptions = {}
+    let riverResult = null
+    if (algorithm === 'river') {
+      nextOptions = { riverMode: true }
+      riverResult = currentRoundResult
+    } else if (algorithm === 'random') {
+      nextOptions = { randomMode: true }
+    } else if (algorithm === 'social') {
+      nextOptions = { socialPriority: true }
+    }
+
+    const draft = suggest({
+      participants: participatingPlayers,
+      activeCourts,
+      options: nextOptions,
+      priorRounds: [...priorRounds, currentRoundAsn],
+      priorRoundResult: riverResult,
+      sittingOutCounts,
+    })
+
+    navigate(`/events/${eventId}/rounds/${newRound.id}`, { state: { draftAssignments: draft } })
+  }
+
   async function handleSetWinner(courtNumber, team) {
     const existing = results.find(r => r.court_number === courtNumber)
     if (existing) {
@@ -315,6 +385,17 @@ export default function RoundDetail() {
         isCommitted={round?.is_committed}
         canWrite={canWrite}
       />
+
+      {round?.is_committed && canWrite && committedAssignments.length > 0 && results.length >= committedAssignments.length && (
+        <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2 flex items-center gap-3 shrink-0 flex-wrap">
+          <span className="text-sm text-emerald-800 font-medium">Round complete! Start next round:</span>
+          <div className="flex gap-2">
+            <button onClick={() => handleNextRound('river')} className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">🌊 River</button>
+            <button onClick={() => handleNextRound('random')} className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">🎲 Random</button>
+            <button onClick={() => handleNextRound('social')} className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">👥 Social</button>
+          </div>
+        </div>
+      )}
 
       {swapTarget && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-sm text-amber-800 text-center shrink-0">
