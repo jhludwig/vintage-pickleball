@@ -1,9 +1,9 @@
-const EXCLUSIVE = [
-  { key: 'randomMode', label: 'Random' },
-  { key: 'rankPriority', label: 'Ranking' },
-  { key: 'socialPriority', label: 'Social' },
-  { key: 'mixedPriority', label: 'Mixed' },
-  { key: 'riverMode', label: 'River' },
+const ALGORITHMS = [
+  { key: 'randomMode', label: 'Random', icon: '🎲' },
+  { key: 'rankPriority', label: 'Rank', icon: '📊' },
+  { key: 'socialPriority', label: 'Social', icon: '👥' },
+  { key: 'mixedPriority', label: 'Mixed', icon: '🔀' },
+  { key: 'riverMode', label: 'River', icon: '🌊' },
 ]
 
 const GENDER_OPTIONS = [
@@ -22,11 +22,6 @@ function Checkbox({ label, checked, onChange }) {
 }
 
 export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCommit, isCommitted, canWrite }) {
-  function handleExclusive(key, checked) {
-    EXCLUSIVE.forEach(cb => onOptionChange(cb.key, false))
-    if (checked) onOptionChange(key, true)
-  }
-
   function handleGender(key) {
     onOptionChange('genderPriority', false)
     onOptionChange('mixedDoubles', false)
@@ -37,13 +32,18 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
 
   return (
     <div className="bg-stone-50 border-b border-stone-200 px-3 py-2 flex items-center gap-2 flex-wrap">
-      {canWrite && (
-        <button
-          onClick={onSuggest}
-          className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shrink-0"
-        >
-          ✨ Suggest
-        </button>
+      {canWrite && !isCommitted && (
+        <div className="flex gap-1.5 flex-wrap shrink-0">
+          {ALGORITHMS.map(alg => (
+            <button
+              key={alg.key}
+              onClick={() => onSuggest(alg.key)}
+              className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+            >
+              {alg.icon} {alg.label}
+            </button>
+          ))}
+        </div>
       )}
 
       <div className="flex-1 flex items-center gap-2 flex-wrap justify-center">
@@ -58,18 +58,6 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           checked={!!options.rotationPriority}
           onChange={e => onOptionChange('rotationPriority', e.target.checked)}
         />
-
-        {/* Mutually exclusive ordering group */}
-        <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">
-          {EXCLUSIVE.map(cb => (
-            <Checkbox
-              key={cb.key}
-              label={cb.label}
-              checked={!!options[cb.key]}
-              onChange={e => handleExclusive(cb.key, e.target.checked)}
-            />
-          ))}
-        </div>
 
         {/* Mutually exclusive gender group */}
         <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">

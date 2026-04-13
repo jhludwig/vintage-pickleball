@@ -176,10 +176,17 @@ export default function RoundDetail() {
       .eq('court_number', courtNumber)
   }
 
-  function handleSuggest() {
+  function handleSuggest(algorithmKey) {
     const activeCourts = courts.filter(c => c.is_active).map(c => c.court_number)
     const participatingPlayers = allPlayers.filter(p => participants.has(p.id))
-    const draft = suggest({ participants: participatingPlayers, activeCourts, options, priorRounds, priorRoundResult, sittingOutCounts })
+    const mergedOptions = {
+      memberPriority: options.memberPriority,
+      rotationPriority: options.rotationPriority,
+      genderPriority: options.genderPriority,
+      mixedDoubles: options.mixedDoubles,
+      [algorithmKey]: true,
+    }
+    const draft = suggest({ participants: participatingPlayers, activeCourts, options: mergedOptions, priorRounds, priorRoundResult, sittingOutCounts })
     setDraftAssignments(draft)
     setSwapTarget(null)
     setSuggestKey(k => k + 1)
