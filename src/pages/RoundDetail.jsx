@@ -146,6 +146,14 @@ export default function RoundDetail() {
 
   useEffect(() => { load() }, [load])
 
+  // When roundId changes (navigating to a new round from a completed one), React reuses
+  // this component instance, so useState() doesn't reinitialize. Sync draftAssignments
+  // from navigation state explicitly.
+  useEffect(() => {
+    setDraftAssignments(location.state?.draftAssignments ?? [])
+    setSuggestKey(k => k + 1)
+  }, [roundId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const saveParticipantsTimer = useRef(null)
   const pendingParticipants = useRef(null)
 
