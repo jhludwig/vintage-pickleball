@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { currentSeasonRange } from '../lib/season'
 import { fullName } from '../lib/playerName'
+import { parseRank } from '../features/rounds/algorithms'
 import Spinner from '../components/Spinner'
 
 export default function Leaderboard() {
   const [rows, setRows] = useState(null)
   const [seasonLabel, setSeasonLabel] = useState('')
   const [threshold, setThreshold] = useState(1)
+  const [minRating, setMinRating] = useState('')
+  const [maxRating, setMaxRating] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -40,7 +43,7 @@ export default function Leaderboard() {
         const [{ data: assignments, error: asnErr }, { data: results, error: resErr }] = await Promise.all([
           supabase
             .from('court_assignments')
-            .select('round_id, court_number, player_id, team, players(id, first_name, last_name, player_type)')
+            .select('round_id, court_number, player_id, team, players(id, first_name, last_name, player_type, ranking)')
             .in('round_id', roundIds),
           supabase
             .from('court_results')
@@ -111,12 +114,52 @@ export default function Leaderboard() {
 
   if (rows === null) return <Spinner />
 
+  const minVal = parseFloat(minRating)
+  const maxVal = parseFloat(maxRating)
+  const filteredRows = rows.filter(row => {
+    const rating = parseRank(row.player.ranking)
+    if (!isNaN(minVal) && minVal > 0 && (rating < 0 || rating < minVal)) return false
+    if (!isNaN(maxVal) && maxVal > 0 && (rating < 0 || rating > maxVal)) return false
+    return true
+  })
+
   return (
     <div className="max-w-lg mx-auto px-4 pt-4 pb-4">
       <h2 className="text-xl font-bold text-stone-800 mb-0.5">{seasonLabel} Leaderboard</h2>
-      <p className="text-xs text-stone-400 mb-4">Min. {threshold} {threshold === 1 ? 'game' : 'games'} to qualify</p>
+      <p className="text-xs text-stone-400 mb-3">Min. {threshold} {threshold === 1 ? 'game' : 'games'} to qualify</p>
 
-      {rows.length === 0 ? (
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs text-stone-500 whitespace-nowrap">Rating:</span>
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          placeholder="Min"
+          value={minRating}
+          onChange={e => setMinRating(e.target.value)}
+          className="w-20 text-xs border border-stone-300 rounded-lg px-2 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        />
+        <span className="text-xs text-stone-400">–</span>
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          placeholder="Max"
+          value={maxRating}
+          onChange={e => setMaxRating(e.target.value)}
+          className="w-20 text-xs border border-stone-300 rounded-lg px-2 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        />
+        {(minRating || maxRating) && (
+          <button
+            onClick={() => { setMinRating(''); setMaxRating('') }}
+            className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {filteredRows.length === 0 ? (
         <div className="text-center text-stone-400 py-12">No results yet for the current season.</div>
       ) : (
         <div className="bg-white rounded-xl border border-stone-200 shadow-sm overflow-hidden">
@@ -131,7 +174,7 @@ export default function Leaderboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {rows.map((row, i) => (
+              {filteredRows.map((row, i) => (
                 <tr key={row.player.id} className="hover:bg-stone-50 transition-colors">
                   <td className="px-4 py-3 text-stone-400 text-xs">
                     {medals[i] ?? i + 1}
