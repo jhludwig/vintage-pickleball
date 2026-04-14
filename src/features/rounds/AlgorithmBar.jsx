@@ -1,9 +1,8 @@
 const ALGORITHMS = [
-  { key: 'randomMode', label: 'Random', icon: '🎲' },
-  { key: 'rankPriority', label: 'Rank', icon: '📊' },
-  { key: 'socialPriority', label: 'Social', icon: '👥' },
-  { key: 'mixedPriority', label: 'Mixed', icon: '🔀' },
-  { key: 'riverMode', label: 'River', icon: '🌊' },
+  { key: 'randomMode', label: 'Random', icon: '🎲', tooltip: 'Randomly assign players to courts' },
+  { key: 'rankPriority', label: 'Rank', icon: '📊', tooltip: 'Group players by skill rating so higher-ranked players share courts' },
+  { key: 'socialPriority', label: 'Social', icon: '👥', tooltip: 'Minimize repeat court-sharings — maximize variety in who plays together' },
+  { key: 'riverMode', label: 'River', icon: '🌊', tooltip: 'Winners move up a court, losers move down — based on last round results' },
 ]
 
 const GENDER_OPTIONS = [
@@ -38,6 +37,7 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
             <button
               key={alg.key}
               onClick={() => onSuggest(alg.key)}
+              title={alg.tooltip}
               className="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
             >
               {alg.icon} {alg.label}

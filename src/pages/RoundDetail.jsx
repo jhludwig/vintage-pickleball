@@ -328,6 +328,8 @@ export default function RoundDetail() {
       nextOptions = { randomMode: true }
     } else if (algorithm === 'social') {
       nextOptions = { socialPriority: true }
+    } else if (algorithm === 'rankPriority') {
+      nextOptions = { rankPriority: true }
     }
 
     const draft = suggest({
@@ -397,9 +399,10 @@ export default function RoundDetail() {
         <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2 flex items-center gap-3 shrink-0 flex-wrap">
           <span className="text-sm text-emerald-800 font-medium">Round complete! Start next round:</span>
           <div className="flex gap-2">
-            <button onClick={() => handleNextRound('river')} className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">🌊 River</button>
-            <button onClick={() => handleNextRound('random')} className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">🎲 Random</button>
-            <button onClick={() => handleNextRound('social')} className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">👥 Social</button>
+            <button onClick={() => handleNextRound('river')} title="Winners move up a court, losers move down — based on last round results" className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">🌊 River</button>
+            <button onClick={() => handleNextRound('random')} title="Randomly assign players to courts" className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">🎲 Random</button>
+            <button onClick={() => handleNextRound('social')} title="Minimize repeat court-sharings — maximize variety in who plays together" className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">👥 Social</button>
+            <button onClick={() => handleNextRound('rankPriority')} title="Group players by skill rating so higher-ranked players share courts" className="text-xs bg-white border border-emerald-300 text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors">📊 Rank</button>
           </div>
         </div>
       )}
