@@ -273,7 +273,11 @@ function riverAssign(pool, activeCourts, priorRoundResult) {
   // Winners of court N move to court N-1; losers move to court N+1.
   // Court 1 winners stay; lowest court losers stay.
   // Former teammates are always split across teams at their new court.
-  const sortedCourts = [...activeCourts].sort((a, b) => a - b)
+  // Only include courts that have results — courts that were active but
+  // never played leave a gap that would incorrectly shift the bottom boundary.
+  const sortedCourts = [...activeCourts]
+    .sort((a, b) => a - b)
+    .filter(c => !!priorRoundResult[c])
   const numCourts = sortedCourts.length
 
   // newGroups[i] = array of [Player, Player] pairs (former teammates to be split)
