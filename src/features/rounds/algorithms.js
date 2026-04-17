@@ -210,8 +210,11 @@ function mixedDoublesGroup(selected, numCourts) {
   const result = []
   while (result.length < numCourts * 4 && (males.length > 0 || females.length > 0)) {
     result.push(males.length > 0 ? males.shift() : females.shift())   // team1[0]
+    if (!males.length && !females.length) break
     result.push(females.length > 0 ? females.shift() : males.shift()) // team1[1]
+    if (!males.length && !females.length) break
     result.push(males.length > 0 ? males.shift() : females.shift())   // team2[0]
+    if (!males.length && !females.length) break
     result.push(females.length > 0 ? females.shift() : males.shift()) // team2[1]
   }
 
