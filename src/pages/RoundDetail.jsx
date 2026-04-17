@@ -15,6 +15,7 @@ export default function RoundDetail() {
   const location = useLocation()
   const session = useAuth()
   const canWrite = !!session
+  const showRankings = !!session
 
   const [round, setRound] = useState(null)
   const [event, setEvent] = useState(null)
@@ -427,6 +428,7 @@ export default function RoundDetail() {
           selected={participants}
           onChange={handleParticipantChange}
           canWrite={canWrite}
+          showRankings={showRankings}
           onAddGuest={handleAddGuest}
         />
         <CourtGrid
@@ -439,6 +441,7 @@ export default function RoundDetail() {
           onSetWinner={handleSetWinner}
           isCommitted={round?.is_committed}
           canWrite={canWrite}
+          showRankings={showRankings}
           holdingPen={holdingPen}
           suggestKey={suggestKey}
           flashedIds={flashedIds}

@@ -69,7 +69,7 @@ function AddGuestModal({ onSave, onClose }) {
   )
 }
 
-export default function ParticipantPanel({ players, selected, onChange, canWrite, onAddGuest }) {
+export default function ParticipantPanel({ players, selected, onChange, canWrite, showRankings, onAddGuest }) {
   const [showAddGuest, setShowAddGuest] = useState(false)
   const sorted = [...players].sort((a, b) => a.last_name.localeCompare(b.last_name))
 
@@ -83,7 +83,7 @@ export default function ParticipantPanel({ players, selected, onChange, canWrite
       <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2 px-3 pt-2">Participants</div>
       <div className="flex-1 overflow-y-auto px-1 space-y-0.5">
         {sorted.map(p => (
-          <label key={p.id} className={`flex items-center gap-2 cursor-pointer px-1 py-1 rounded-lg hover:bg-stone-50 transition-colors border-l-4 ${ratingTierClass(p.ranking)}`}>
+          <label key={p.id} className={`flex items-center gap-2 cursor-pointer px-1 py-1 rounded-lg hover:bg-stone-50 transition-colors border-l-4 ${showRankings ? ratingTierClass(p.ranking) : 'border-stone-200'}`}>
             <input
               type="checkbox"
               checked={selected.has(p.id)}
@@ -96,7 +96,7 @@ export default function ParticipantPanel({ players, selected, onChange, canWrite
             />
             <span className="text-xs truncate text-stone-700">
               {fullName(p)}
-              {p.ranking ? <span className="text-stone-400"> {p.ranking}</span> : ''}
+              {showRankings && p.ranking ? <span className="text-stone-400"> {p.ranking}</span> : ''}
               {p.player_type === 'guest' ? <span className="text-amber-500"> G</span> : null}
             </span>
           </label>

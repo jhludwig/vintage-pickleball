@@ -110,7 +110,7 @@ export default function PlayerDetail() {
           <div>
             <h2 className="text-xl font-bold text-stone-800">{fullName(player)}</h2>
             <p className="text-sm text-stone-400 mt-0.5 capitalize">
-              {player.player_type}{player.ranking ? ` · ${player.ranking}` : ''}
+              {player.player_type}{session && player.ranking ? ` · ${player.ranking}` : ''}
             </p>
           </div>
           {session && (

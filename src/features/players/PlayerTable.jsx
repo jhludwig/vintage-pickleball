@@ -26,7 +26,7 @@ function sortPlayers(players, col, dir) {
   })
 }
 
-export default function PlayerTable({ players, onRowClick }) {
+export default function PlayerTable({ players, onRowClick, showRankings }) {
   const [sortCol, setSortCol] = useState('last_name')
   const [sortDir, setSortDir] = useState('asc')
 
@@ -48,7 +48,7 @@ export default function PlayerTable({ players, onRowClick }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-stone-50 border-b border-stone-200">
-              {COLS.map(c => (
+              {COLS.filter(c => c.key !== 'ranking' || showRankings).map(c => (
                 <th
                   key={c.key}
                   onClick={() => handleSort(c.key)}
@@ -70,7 +70,7 @@ export default function PlayerTable({ players, onRowClick }) {
                 <td className="px-3 py-2.5 text-stone-700">{p.first_name}</td>
                 <td className="px-3 py-2.5 capitalize text-stone-600">{p.player_type}</td>
                 <td className="px-3 py-2.5 text-stone-600">{p.gender}</td>
-                <td className="px-3 py-2.5 text-stone-600">{p.ranking}</td>
+                {showRankings && <td className="px-3 py-2.5 text-stone-600">{p.ranking}</td>}
                 <td className="px-3 py-2.5 text-emerald-500">{p.plays_pickleball ? '✓' : ''}</td>
               </tr>
             ))}

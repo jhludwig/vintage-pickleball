@@ -1,6 +1,6 @@
 import { fullName, ratingTierClass } from '../../lib/playerName'
 
-export default function CourtCard({ courtNumber, isActive, team1, team2, winningTeam, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, suggestKey, flashedIds, swapTargetId }) {
+export default function CourtCard({ courtNumber, isActive, team1, team2, winningTeam, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, showRankings, suggestKey, flashedIds, swapTargetId }) {
   return (
     <div className={`rounded-xl overflow-hidden border transition-all ${isActive ? 'border-emerald-300 shadow-sm' : 'border-stone-200 opacity-50'}`}>
       <div className={`flex items-center justify-between px-2.5 py-1.5 text-xs font-semibold ${isActive ? 'bg-gradient-to-r from-emerald-700 to-emerald-500 text-white' : 'bg-stone-100 text-stone-400'}`}>
@@ -45,7 +45,7 @@ export default function CourtCard({ courtNumber, isActive, team1, team2, winning
                       'text-xs truncate py-0.5 px-2 rounded-md border border-l-4 mb-0.5',
                       isFlashing ? 'animate-flash-gold' : 'animate-fade-in-up',
                       team === 1 ? 'bg-white/70 border-blue-100' : 'bg-white/70 border-orange-100',
-                      ratingTierClass(p.ranking),
+                      showRankings ? ratingTierClass(p.ranking) : 'border-stone-200',
                       isSwapTarget ? 'ring-2 ring-amber-400 ring-offset-1' : '',
                       canWrite && !isCommitted ? 'cursor-pointer hover:bg-white hover:text-emerald-700' : 'text-stone-700',
                     ].filter(Boolean).join(' ')}

@@ -3,9 +3,12 @@ import { supabase } from '../lib/supabase'
 import { currentSeasonRange } from '../lib/season'
 import { fullName } from '../lib/playerName'
 import { parseRank } from '../features/rounds/algorithms'
+import { useAuth } from '../hooks/useAuth'
 import Spinner from '../components/Spinner'
 
 export default function Leaderboard() {
+  const session = useAuth()
+  const showRankings = !!session
   const [rows, setRows] = useState(null)
   const [seasonLabel, setSeasonLabel] = useState('')
   const [threshold, setThreshold] = useState(1)
@@ -128,36 +131,38 @@ export default function Leaderboard() {
       <h2 className="text-xl font-bold text-stone-800 mb-0.5">{seasonLabel} Leaderboard</h2>
       <p className="text-xs text-stone-400 mb-3">Min. {threshold} {threshold === 1 ? 'game' : 'games'} to qualify</p>
 
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-xs text-stone-500 whitespace-nowrap">Rating:</span>
-        <input
-          type="number"
-          min="0"
-          step="0.1"
-          placeholder="Min"
-          value={minRating}
-          onChange={e => setMinRating(e.target.value)}
-          className="w-20 text-xs border border-stone-300 rounded-lg px-2 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-        />
-        <span className="text-xs text-stone-400">–</span>
-        <input
-          type="number"
-          min="0"
-          step="0.1"
-          placeholder="Max"
-          value={maxRating}
-          onChange={e => setMaxRating(e.target.value)}
-          className="w-20 text-xs border border-stone-300 rounded-lg px-2 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-        />
-        {(minRating || maxRating) && (
-          <button
-            onClick={() => { setMinRating(''); setMaxRating('') }}
-            className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
-          >
-            Clear
-          </button>
-        )}
-      </div>
+      {showRankings && (
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs text-stone-500 whitespace-nowrap">Rating:</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="Min"
+            value={minRating}
+            onChange={e => setMinRating(e.target.value)}
+            className="w-20 text-xs border border-stone-300 rounded-lg px-2 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+          <span className="text-xs text-stone-400">–</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="Max"
+            value={maxRating}
+            onChange={e => setMaxRating(e.target.value)}
+            className="w-20 text-xs border border-stone-300 rounded-lg px-2 py-1.5 text-stone-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          />
+          {(minRating || maxRating) && (
+            <button
+              onClick={() => { setMinRating(''); setMaxRating('') }}
+              className="text-xs text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
 
       {filteredRows.length === 0 ? (
         <div className="text-center text-stone-400 py-12">No results yet for the current season.</div>

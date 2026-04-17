@@ -1,7 +1,7 @@
 import CourtCard from './CourtCard'
 import { fullName } from '../../lib/playerName'
 
-export default function CourtGrid({ courts, draftAssignments, committedAssignments, results, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, holdingPen, suggestKey, flashedIds, swapTargetId }) {
+export default function CourtGrid({ courts, draftAssignments, committedAssignments, results, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, showRankings, holdingPen, suggestKey, flashedIds, swapTargetId }) {
   return (
     <div className="flex-1 p-2 overflow-y-auto">
       <div className="text-xs font-bold uppercase text-stone-400 mb-2">Courts</div>
@@ -23,6 +23,7 @@ export default function CourtGrid({ courts, draftAssignments, committedAssignmen
               onSetWinner={onSetWinner}
               isCommitted={isCommitted}
               canWrite={canWrite}
+              showRankings={showRankings}
               suggestKey={suggestKey}
               flashedIds={flashedIds}
               swapTargetId={swapTargetId}
@@ -44,7 +45,7 @@ export default function CourtGrid({ courts, draftAssignments, committedAssignmen
                 className={`text-xs px-2 py-1 rounded-lg border border-amber-200 bg-amber-50/60 ${!isCommitted && canWrite ? 'cursor-pointer hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800' : 'text-stone-600'}`}
               >
                 {fullName(p)}
-                {p.ranking ? <span className="text-stone-400 ml-1">{p.ranking}</span> : ''}
+                {showRankings && p.ranking ? <span className="text-stone-400 ml-1">{p.ranking}</span> : ''}
               </div>
             ))}
           </div>
