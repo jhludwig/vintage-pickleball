@@ -1,7 +1,9 @@
 import CourtCard from './CourtCard'
 import { fullName } from '../../lib/playerName'
+import { useRankings } from '../../hooks/useRankings'
 
-export default function CourtGrid({ courts, draftAssignments, committedAssignments, results, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, showRankings, holdingPen, suggestKey, flashedIds, swapTargetId }) {
+export default function CourtGrid({ courts, draftAssignments, committedAssignments, results, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, holdingPen, suggestKey, flashedIds, swapTargetId }) {
+  const { showRankings } = useRankings()
   return (
     <div className="flex-1 p-2 overflow-y-auto">
       <div className="text-xs font-bold uppercase text-stone-400 mb-2">Courts</div>
@@ -23,7 +25,6 @@ export default function CourtGrid({ courts, draftAssignments, committedAssignmen
               onSetWinner={onSetWinner}
               isCommitted={isCommitted}
               canWrite={canWrite}
-              showRankings={showRankings}
               suggestKey={suggestKey}
               flashedIds={flashedIds}
               swapTargetId={swapTargetId}

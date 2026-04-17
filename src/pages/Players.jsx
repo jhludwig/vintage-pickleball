@@ -44,7 +44,7 @@ export default function Players() {
           </button>
         </div>
       )}
-      <PlayerTable players={players} onRowClick={p => navigate(`/players/${p.id}`)} showRankings={!!session} />
+      <PlayerTable players={players} onRowClick={p => navigate(`/players/${p.id}`)} />
       {modal && (
         <PlayerModal
           player={null}

@@ -3,12 +3,11 @@ import { supabase } from '../lib/supabase'
 import { currentSeasonRange } from '../lib/season'
 import { fullName } from '../lib/playerName'
 import { parseRank } from '../features/rounds/algorithms'
-import { useAuth } from '../hooks/useAuth'
+import { useRankings } from '../hooks/useRankings'
 import Spinner from '../components/Spinner'
 
 export default function Leaderboard() {
-  const session = useAuth()
-  const showRankings = !!session
+  const { showRankings } = useRankings()
   const [rows, setRows] = useState(null)
   const [seasonLabel, setSeasonLabel] = useState('')
   const [threshold, setThreshold] = useState(1)

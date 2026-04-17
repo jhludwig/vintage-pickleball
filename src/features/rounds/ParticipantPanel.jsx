@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fullName, ratingTierClass } from '../../lib/playerName'
+import { useRankings } from '../../hooks/useRankings'
 
 const EMPTY_GUEST = { first_name: '', last_name: '', gender: '', ranking: '' }
 
@@ -69,7 +70,8 @@ function AddGuestModal({ onSave, onClose }) {
   )
 }
 
-export default function ParticipantPanel({ players, selected, onChange, canWrite, showRankings, onAddGuest }) {
+export default function ParticipantPanel({ players, selected, onChange, canWrite, onAddGuest }) {
+  const { showRankings } = useRankings()
   const [showAddGuest, setShowAddGuest] = useState(false)
   const sorted = [...players].sort((a, b) => a.last_name.localeCompare(b.last_name))
 

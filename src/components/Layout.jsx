@@ -1,11 +1,13 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useRankings } from '../hooks/useRankings'
 import { supabase } from '../lib/supabase'
 
 const LOGO = 'https://static.clubessential.com/CEFED/_Axis-Website/Sites/VintageClub-2023/images/Logos/LogoColor.svg'
 
 export default function Layout() {
   const session = useAuth()
+  const { showRankings, toggleRankings } = useRankings()
   const navigate = useNavigate()
 
   async function handleLogout() {
@@ -21,7 +23,17 @@ export default function Layout() {
           <img src={LOGO} alt="Vintage Club" className="h-9 w-auto" />
           <h1 className="text-lg font-semibold tracking-wide">Vintage Club Pickleball</h1>
         </div>
-        {session ? (
+        <div className="flex items-center gap-3">
+          {session && (
+            <button
+              onClick={toggleRankings}
+              title="Toggle Ratings"
+              className={`text-lg transition-colors ${showRankings ? 'text-white/80 hover:text-white' : 'text-white/30 hover:text-white/60'}`}
+            >
+              👁
+            </button>
+          )}
+          {session ? (
           <button
             onClick={handleLogout}
             className="text-sm text-white/60 hover:text-white transition-colors"
@@ -35,7 +47,8 @@ export default function Layout() {
           >
             Sign in
           </button>
-        )}
+          )}
+        </div>
       </header>
 
       {/* Page content */}

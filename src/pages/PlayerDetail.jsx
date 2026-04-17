@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useRankings } from '../hooks/useRankings'
 import { fullName } from '../lib/playerName'
 import { currentSeasonRange } from '../lib/season'
 import PlayerModal from '../features/players/PlayerModal'
@@ -11,6 +12,7 @@ export default function PlayerDetail() {
   const { playerId } = useParams()
   const navigate = useNavigate()
   const session = useAuth()
+  const { showRankings } = useRankings()
   const [player, setPlayer] = useState(null)
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -110,7 +112,7 @@ export default function PlayerDetail() {
           <div>
             <h2 className="text-xl font-bold text-stone-800">{fullName(player)}</h2>
             <p className="text-sm text-stone-400 mt-0.5 capitalize">
-              {player.player_type}{session && player.ranking ? ` · ${player.ranking}` : ''}
+              {player.player_type}{showRankings && player.ranking ? ` · ${player.ranking}` : ''}
             </p>
           </div>
           {session && (

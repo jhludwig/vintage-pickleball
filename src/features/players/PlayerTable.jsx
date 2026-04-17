@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useRankings } from '../../hooks/useRankings'
 
 const COLS = [
   { key: 'last_name', label: 'Last Name' },
@@ -26,7 +27,8 @@ function sortPlayers(players, col, dir) {
   })
 }
 
-export default function PlayerTable({ players, onRowClick, showRankings }) {
+export default function PlayerTable({ players, onRowClick }) {
+  const { showRankings } = useRankings()
   const [sortCol, setSortCol] = useState('last_name')
   const [sortDir, setSortDir] = useState('asc')
 

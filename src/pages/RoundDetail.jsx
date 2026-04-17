@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useRankings } from '../hooks/useRankings'
 import { suggest } from '../features/rounds/algorithms'
 import { fullName } from '../lib/playerName'
 import AlgorithmBar from '../features/rounds/AlgorithmBar'
@@ -15,7 +16,7 @@ export default function RoundDetail() {
   const location = useLocation()
   const session = useAuth()
   const canWrite = !!session
-  const showRankings = !!session
+  const { showRankings } = useRankings()
 
   const [round, setRound] = useState(null)
   const [event, setEvent] = useState(null)
@@ -428,7 +429,6 @@ export default function RoundDetail() {
           selected={participants}
           onChange={handleParticipantChange}
           canWrite={canWrite}
-          showRankings={showRankings}
           onAddGuest={handleAddGuest}
         />
         <CourtGrid
@@ -441,7 +441,6 @@ export default function RoundDetail() {
           onSetWinner={handleSetWinner}
           isCommitted={round?.is_committed}
           canWrite={canWrite}
-          showRankings={showRankings}
           holdingPen={holdingPen}
           suggestKey={suggestKey}
           flashedIds={flashedIds}
