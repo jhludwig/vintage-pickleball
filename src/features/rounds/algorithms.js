@@ -133,9 +133,14 @@ function standardAssign(pool, activeCourts, options, priorRounds, sittingOutCoun
     selected = socialPriorityArrange(selected, activeCourts.length, priorRounds)
   }
 
-  return activeCourts.map((courtNum, i) =>
-    makeCourt(courtNum, selected.slice(i * 4, i * 4 + 4))
-  )
+  return activeCourts.map((courtNum, i) => {
+    const four = selected.slice(i * 4, i * 4 + 4)
+    // Rank: snake-draft teams so skill is balanced — 1st & 4th vs 2nd & 3rd
+    if (options.rankPriority && four.length === 4) {
+      return { court_number: courtNum, team1: [four[0], four[3]], team2: [four[1], four[2]] }
+    }
+    return makeCourt(courtNum, four)
+  })
 }
 
 function mixedPrioritySort(pool, numCourts) {

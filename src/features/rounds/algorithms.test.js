@@ -71,6 +71,22 @@ describe('suggest — rank priority', () => {
     const court2Ranks = court2.map(p => parseRank(p.ranking))
     expect(Math.min(...court1Ranks)).toBeGreaterThan(Math.max(...court2Ranks))
   })
+
+  it('uses snake-draft team assignment: 1st & 4th vs 2nd & 3rd', () => {
+    // Ranked order: p1(4.5) > p2(4.0) > p3(3.5) > p4(3.0)
+    const players = [
+      makePlayer('p1', 'P1', 'member', '4.5'),
+      makePlayer('p2', 'P2', 'member', '4.0'),
+      makePlayer('p3', 'P3', 'member', '3.5'),
+      makePlayer('p4', 'P4', 'member', '3.0'),
+    ]
+    const result = suggest({ participants: players, activeCourts: [1], options: { rankPriority: true } })
+    const court = result[0]
+    const team1Ids = court.team1.map(p => p.id).sort()
+    const team2Ids = court.team2.map(p => p.id).sort()
+    expect(team1Ids).toEqual(['p1', 'p4'])
+    expect(team2Ids).toEqual(['p2', 'p3'])
+  })
 })
 
 describe('suggest — member priority', () => {
