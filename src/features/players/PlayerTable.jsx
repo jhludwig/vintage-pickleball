@@ -22,7 +22,7 @@ function sortPlayers(players, col, dir) {
   })
 }
 
-export default function PlayerTable({ players, onRowClick, onToggleActive, toggleLabel, toggleClass }) {
+export default function PlayerTable({ players, onRowClick, onToggleActive, checkColor, toggleTitle }) {
   const { showRankings } = useRankings()
   const [sortCol, setSortCol] = useState('last_name')
   const [sortDir, setSortDir] = useState('asc')
@@ -45,6 +45,7 @@ export default function PlayerTable({ players, onRowClick, onToggleActive, toggl
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-stone-50 border-b border-stone-200">
+              {onToggleActive && <th className="px-3 py-2.5 w-8" />}
               {COLS.filter(c => c.key !== 'ranking' || showRankings).map(c => (
                 <th
                   key={c.key}
@@ -54,7 +55,6 @@ export default function PlayerTable({ players, onRowClick, onToggleActive, toggl
                   {c.label} {sortCol === c.key ? <span className="text-emerald-500">{arrow}</span> : ''}
                 </th>
               ))}
-              {onToggleActive && <th className="px-3 py-2.5" />}
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -64,21 +64,22 @@ export default function PlayerTable({ players, onRowClick, onToggleActive, toggl
                 onClick={() => onRowClick(p)}
                 className="hover:bg-stone-50 cursor-pointer transition-colors"
               >
+                {onToggleActive && (
+                  <td className="px-3 py-2.5 text-center">
+                    <button
+                      onClick={e => { e.stopPropagation(); onToggleActive(p) }}
+                      title={toggleTitle}
+                      className={`text-base leading-none transition-colors ${checkColor}`}
+                    >
+                      ✓
+                    </button>
+                  </td>
+                )}
                 <td className="px-3 py-2.5 font-medium text-stone-800">{p.last_name}</td>
                 <td className="px-3 py-2.5 text-stone-700">{p.first_name}</td>
                 <td className="px-3 py-2.5 capitalize text-stone-600">{p.player_type}</td>
                 <td className="px-3 py-2.5 text-stone-600">{p.gender}</td>
                 {showRankings && <td className="px-3 py-2.5 text-stone-600">{p.ranking}</td>}
-                {onToggleActive && (
-                  <td className="px-3 py-2.5 text-right">
-                    <button
-                      onClick={e => { e.stopPropagation(); onToggleActive(p) }}
-                      className={`text-xs px-2 py-1 rounded-lg border transition-colors ${toggleClass}`}
-                    >
-                      {toggleLabel}
-                    </button>
-                  </td>
-                )}
               </tr>
             ))}
           </tbody>

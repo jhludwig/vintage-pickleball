@@ -46,7 +46,7 @@ export default function Players() {
   const inactive = players.filter(p => !p.plays_pickleball)
 
   return (
-    <div className="max-w-lg mx-auto pb-4">
+    <div className="max-w-4xl mx-auto pb-4">
       {/* Active Players */}
       <div className="px-4 pt-4 flex items-center justify-between">
         <h2 className="text-base font-semibold text-stone-700">Active Players</h2>
@@ -63,8 +63,8 @@ export default function Players() {
         players={active}
         onRowClick={p => navigate(`/players/${p.id}`)}
         onToggleActive={session ? handleToggleActive : null}
-        toggleLabel="Set Inactive"
-        toggleClass="border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-600"
+        checkColor="text-emerald-500 hover:text-emerald-700"
+        toggleTitle="Set Inactive"
       />
 
       {/* Inactive Vintage Members */}
@@ -83,8 +83,8 @@ export default function Players() {
           players={inactive}
           onRowClick={p => navigate(`/players/${p.id}`)}
           onToggleActive={session ? handleToggleActive : null}
-          toggleLabel="Set Active"
-          toggleClass="border-emerald-200 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50"
+          checkColor="text-stone-300 hover:text-emerald-400"
+          toggleTitle="Set Active"
         />
       )}
 
