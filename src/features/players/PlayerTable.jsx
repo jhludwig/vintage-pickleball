@@ -7,7 +7,6 @@ const COLS = [
   { key: 'player_type', label: 'Type' },
   { key: 'gender', label: 'Gender' },
   { key: 'ranking', label: 'Ranking' },
-  { key: 'plays_pickleball', label: 'Active' },
 ]
 
 function sortPlayers(players, col, dir) {
@@ -18,16 +17,12 @@ function sortPlayers(players, col, dir) {
       bv = parseFloat(bv) || -1
       return dir === 'asc' ? av - bv : bv - av
     }
-    if (col === 'plays_pickleball') {
-      av = av ? 1 : 0; bv = bv ? 1 : 0
-      return dir === 'asc' ? av - bv : bv - av
-    }
     av = String(av ?? '').toLowerCase(); bv = String(bv ?? '').toLowerCase()
     return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av)
   })
 }
 
-export default function PlayerTable({ players, onRowClick }) {
+export default function PlayerTable({ players, onRowClick, onToggleActive, toggleLabel, toggleClass }) {
   const { showRankings } = useRankings()
   const [sortCol, setSortCol] = useState('last_name')
   const [sortDir, setSortDir] = useState('asc')
@@ -45,7 +40,7 @@ export default function PlayerTable({ players, onRowClick }) {
   const arrow = sortDir === 'asc' ? '↑' : '↓'
 
   return (
-    <div className="mx-4 mt-3 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+    <div className="mx-4 mt-2 bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -59,6 +54,7 @@ export default function PlayerTable({ players, onRowClick }) {
                   {c.label} {sortCol === c.key ? <span className="text-emerald-500">{arrow}</span> : ''}
                 </th>
               ))}
+              {onToggleActive && <th className="px-3 py-2.5" />}
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -73,7 +69,16 @@ export default function PlayerTable({ players, onRowClick }) {
                 <td className="px-3 py-2.5 capitalize text-stone-600">{p.player_type}</td>
                 <td className="px-3 py-2.5 text-stone-600">{p.gender}</td>
                 {showRankings && <td className="px-3 py-2.5 text-stone-600">{p.ranking}</td>}
-                <td className="px-3 py-2.5 text-emerald-500">{p.plays_pickleball ? '✓' : ''}</td>
+                {onToggleActive && (
+                  <td className="px-3 py-2.5 text-right">
+                    <button
+                      onClick={e => { e.stopPropagation(); onToggleActive(p) }}
+                      className={`text-xs px-2 py-1 rounded-lg border transition-colors ${toggleClass}`}
+                    >
+                      {toggleLabel}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
