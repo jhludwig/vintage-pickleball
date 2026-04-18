@@ -123,7 +123,7 @@ function standardAssign(pool, activeCourts, options, priorRounds, sittingOutCoun
 
   // Gender options: single-gender courts, mixed doubles teams, or ignore gender
   if (options.genderPriority) {
-    selected = genderGroup(selected, activeCourts.length)
+    selected = genderGroup(selected, activeCourts.length, !!options.rankPriority)
   } else if (options.mixedDoubles) {
     selected = mixedDoublesGroup(selected, activeCourts.length)
   }
@@ -164,8 +164,30 @@ function mixedPrioritySort(pool, numCourts) {
   return [...top, ...mid, ...bot].slice(0, slots)
 }
 
-function genderGroup(selected, numCourts) {
-  // Separate by gender, fill courts with single-gender groups where possible
+function genderGroup(selected, numCourts, alternating = false) {
+  if (alternating) {
+    // Rank+Gender: alternate courts by gender — even-indexed courts get F, odd get M.
+    // Players are already rank-sorted, so each gender pool stays in rank order.
+    const pool1 = selected.filter(p => p.gender === 'F') // even courts (0,2,4…)
+    const pool2 = selected.filter(p => p.gender === 'M') // odd courts (1,3,5…)
+    const others = selected.filter(p => p.gender !== 'F' && p.gender !== 'M')
+    for (const p of others) {
+      pool1.length <= pool2.length ? pool1.push(p) : pool2.push(p)
+    }
+
+    const result = []
+    for (let i = 0; i < numCourts; i++) {
+      const primary = i % 2 === 0 ? pool1 : pool2
+      const fallback = i % 2 === 0 ? pool2 : pool1
+      for (let j = 0; j < 4; j++) {
+        if (primary.length > 0) result.push(primary.shift())
+        else if (fallback.length > 0) result.push(fallback.shift())
+      }
+    }
+    return result.slice(0, selected.length)
+  }
+
+  // Default: separate by gender, fill courts with single-gender groups where possible
   const groups = {}
   for (const p of selected) {
     const g = p.gender || 'Other'
