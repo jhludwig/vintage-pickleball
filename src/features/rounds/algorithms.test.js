@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseRank, suggest } from './algorithms'
+import { parseRank, suggest, resolveBlocks } from './algorithms'
 
 // Helpers
 function makePlayer(id, name, player_type, ranking, gender = 'M') {
@@ -364,5 +364,85 @@ describe('suggest — river mode', () => {
     expect(c2t2.includes('c1l1') && c2t2.includes('c1l2')).toBe(false)
     expect(c2t1.includes('c2l1') && c2t1.includes('c2l2')).toBe(false)
     expect(c2t2.includes('c2l1') && c2t2.includes('c2l2')).toBe(false)
+  })
+})
+
+describe('resolveBlocks', () => {
+  // bp(a, b) builds the canonical block key matching what resolveBlocks expects
+  function bp(idA, idB) {
+    const [a, b] = [idA, idB].sort()
+    return `${a}|${b}`
+  }
+
+  it('returns courts unchanged and empty violations when blockPairs is empty', () => {
+    const courts = [
+      { court_number: 1, team1: [makePlayer('a', 'A', 'member', '3.5')], team2: [makePlayer('b', 'B', 'member', '3.5')] },
+    ]
+    const { courts: out, violations } = resolveBlocks(courts, new Set())
+    expect(out).toEqual(courts)
+    expect(violations).toHaveLength(0)
+  })
+
+  it('swaps a blocked pair apart when a valid swap target exists', () => {
+    const p1 = makePlayer('p1', 'P1', 'member', '3.5')
+    const p2 = makePlayer('p2', 'P2', 'member', '3.5')
+    const p3 = makePlayer('p3', 'P3', 'member', '3.5')
+    const p4 = makePlayer('p4', 'P4', 'member', '3.5')
+    const p5 = makePlayer('p5', 'P5', 'member', '3.5')
+    const p6 = makePlayer('p6', 'P6', 'member', '3.5')
+    const p7 = makePlayer('p7', 'P7', 'member', '3.5')
+    const p8 = makePlayer('p8', 'P8', 'member', '3.5')
+    // p1 and p2 start on the same court; they are blocked
+    const courts = [
+      { court_number: 1, team1: [p1, p2], team2: [p3, p4] },
+      { court_number: 2, team1: [p5, p6], team2: [p7, p8] },
+    ]
+    const { courts: out, violations } = resolveBlocks(courts, new Set([bp('p1', 'p2')]))
+    const c1Ids = [...out[0].team1, ...out[0].team2].map(p => p.id)
+    expect(c1Ids.includes('p1') && c1Ids.includes('p2')).toBe(false)
+    expect(violations).toHaveLength(0)
+    const allIds = [...out[0].team1, ...out[0].team2, ...out[1].team1, ...out[1].team2].map(p => p.id)
+    expect(allIds).toHaveLength(8)
+  })
+
+  it('reports an unresolved violation when only one court exists', () => {
+    const p1 = makePlayer('p1', 'P1', 'member', '3.5')
+    const p2 = makePlayer('p2', 'P2', 'member', '3.5')
+    const p3 = makePlayer('p3', 'P3', 'member', '3.5')
+    const p4 = makePlayer('p4', 'P4', 'member', '3.5')
+    const courts = [
+      { court_number: 1, team1: [p1, p2], team2: [p3, p4] },
+    ]
+    const { violations } = resolveBlocks(courts, new Set([bp('p1', 'p2')]))
+    expect(violations).toHaveLength(1)
+    expect(violations[0].courtNumber).toBe(1)
+    const vIds = [violations[0].playerA.id, violations[0].playerB.id].sort()
+    expect(vIds).toEqual(['p1', 'p2'])
+  })
+
+  it('leaves a violation unresolved when every swap candidate would create a new one', () => {
+    const p1 = makePlayer('p1', 'P1', 'member', '3.5')
+    const p2 = makePlayer('p2', 'P2', 'member', '3.5')
+    const p3 = makePlayer('p3', 'P3', 'member', '3.5')
+    const p4 = makePlayer('p4', 'P4', 'member', '3.5')
+    const p5 = makePlayer('p5', 'P5', 'member', '3.5')
+    const p6 = makePlayer('p6', 'P6', 'member', '3.5')
+    const p7 = makePlayer('p7', 'P7', 'member', '3.5')
+    const p8 = makePlayer('p8', 'P8', 'member', '3.5')
+    const courts = [
+      { court_number: 1, team1: [p1, p2], team2: [p3, p4] },
+      { court_number: 2, team1: [p5, p6], team2: [p7, p8] },
+    ]
+    // p1 is blocked with p2 (on same court) AND with every player on court 2
+    const blockPairs = new Set([
+      bp('p1', 'p2'),
+      bp('p1', 'p5'), bp('p1', 'p6'), bp('p1', 'p7'), bp('p1', 'p8'),
+      bp('p2', 'p5'), bp('p2', 'p6'), bp('p2', 'p7'), bp('p2', 'p8'),
+    ])
+    const { violations } = resolveBlocks(courts, blockPairs)
+    // p1 can't move to court 2 without landing next to a blocked player — violation remains
+    expect(violations).toHaveLength(1)
+    const vIds = [violations[0].playerA.id, violations[0].playerB.id].sort()
+    expect(vIds).toEqual(['p1', 'p2'])
   })
 })
