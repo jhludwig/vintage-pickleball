@@ -8,6 +8,23 @@ import { currentSeasonRange } from '../lib/season'
 import PlayerModal from '../features/players/PlayerModal'
 import Spinner from '../components/Spinner'
 
+function BlockPlayerSelect({ allPlayers, blockedIds, onAdd }) {
+  const available = allPlayers.filter(p => !blockedIds.has(p.id))
+  if (available.length === 0) return null
+  return (
+    <select
+      className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-stone-600"
+      value=""
+      onChange={e => { if (e.target.value) onAdd(e.target.value) }}
+    >
+      <option value="">Add player to block list…</option>
+      {available.map(p => (
+        <option key={p.id} value={p.id}>{fullName(p)}</option>
+      ))}
+    </select>
+  )
+}
+
 export default function PlayerDetail() {
   const { playerId } = useParams()
   const navigate = useNavigate()
@@ -17,6 +34,8 @@ export default function PlayerDetail() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showEdit, setShowEdit] = useState(false)
+  const [blockList, setBlockList] = useState([])
+  const [allPlayers, setAllPlayers] = useState([])
 
   const season = currentSeasonRange()
 
@@ -26,6 +45,8 @@ export default function PlayerDetail() {
         { data: playerData, error: playerError },
         { data: participations, error: partError },
         { data: assignments, error: asnError },
+        { data: blocksData },
+        { data: playersData },
       ] = await Promise.all([
         supabase.from('players').select('*').eq('id', playerId).single(),
         supabase
@@ -36,6 +57,16 @@ export default function PlayerDetail() {
           .from('court_assignments')
           .select('round_id, court_number, team, rounds(event_id, events(date))')
           .eq('player_id', playerId),
+        supabase
+          .from('player_blocks')
+          .select('id, player_id_a, player_id_b')
+          .or(`player_id_a.eq.${playerId},player_id_b.eq.${playerId}`),
+        supabase
+          .from('players')
+          .select('id, first_name, last_name')
+          .eq('plays_pickleball', true)
+          .order('last_name')
+          .order('first_name'),
       ])
       if (playerError) console.error('Failed to load player:', playerError)
       if (partError) console.error('Failed to load participations:', partError)
@@ -75,6 +106,16 @@ export default function PlayerDetail() {
 
       setPlayer(playerData)
       setStats({ eventsAttended, gamesPlayed, wins, winRate })
+      setAllPlayers(playersData ?? [])
+      const playersById = Object.fromEntries((playersData ?? []).map(p => [p.id, p]))
+      setBlockList(
+        (blocksData ?? [])
+          .map(b => ({
+            blockId: b.id,
+            player: b.player_id_a === playerId ? playersById[b.player_id_b] : playersById[b.player_id_a],
+          }))
+          .filter(b => b.player)
+      )
     } finally {
       setLoading(false)
     }
@@ -94,6 +135,19 @@ export default function PlayerDetail() {
     const { error } = await supabase.from('players').delete().eq('id', id)
     if (error) { alert(`Failed to delete: ${error.message}`); return }
     navigate('/players')
+  }
+
+  async function handleAddBlock(otherPlayerId) {
+    const [a, b] = [playerId, otherPlayerId].sort()
+    const { error } = await supabase.from('player_blocks').insert({ player_id_a: a, player_id_b: b })
+    if (error) { alert(`Failed to add block: ${error.message}`); return }
+    load()
+  }
+
+  async function handleRemoveBlock(blockId) {
+    const { error } = await supabase.from('player_blocks').delete().eq('id', blockId)
+    if (error) { alert(`Failed to remove block: ${error.message}`); return }
+    load()
   }
 
   if (loading) return <Spinner />
@@ -149,6 +203,43 @@ export default function PlayerDetail() {
           </div>
         </div>
       </div>
+
+      {session && (
+        <div className="px-4 pb-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-2">
+            Block List
+          </div>
+          <div className="bg-white border border-stone-200 rounded-xl shadow-sm p-4">
+            {blockList.length === 0 && (
+              <p className="text-xs text-stone-400 mb-3">No blocked players.</p>
+            )}
+            {blockList.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {blockList.map(({ blockId, player }) => (
+                  <span
+                    key={blockId}
+                    className="inline-flex items-center gap-1 text-xs bg-red-50 border border-red-200 text-red-700 px-2 py-1 rounded-full"
+                  >
+                    {fullName(player)}
+                    <button
+                      onClick={() => handleRemoveBlock(blockId)}
+                      className="text-red-400 hover:text-red-600 font-bold leading-none"
+                      aria-label={`Remove block for ${fullName(player)}`}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <BlockPlayerSelect
+              allPlayers={allPlayers}
+              blockedIds={new Set([playerId, ...blockList.map(b => b.player.id)])}
+              onAdd={handleAddBlock}
+            />
+          </div>
+        </div>
+      )}
 
       {showEdit && (
         <PlayerModal
