@@ -373,7 +373,19 @@ export default function RoundDetail() {
       sittingOutCounts,
     })
 
-    navigate(`/events/${eventId}/rounds/${newRound.id}`, { state: { draftAssignments: draft } })
+    let finalDraft = draft
+    if (options.honorBlocks && allBlocks.length > 0) {
+      const participantIds = new Set(participatingPlayers.map(p => p.id))
+      const blockPairs = new Set(
+        allBlocks
+          .filter(b => participantIds.has(b.player_id_a) && participantIds.has(b.player_id_b))
+          .map(b => `${b.player_id_a}|${b.player_id_b}`)
+      )
+      const { courts: resolved } = resolveBlocks(draft, blockPairs)
+      finalDraft = resolved
+    }
+
+    navigate(`/events/${eventId}/rounds/${newRound.id}`, { state: { draftAssignments: finalDraft } })
   }
 
   async function handleSetWinner(courtNumber, team) {
