@@ -159,6 +159,7 @@ export default function RoundDetail() {
   useEffect(() => {
     setDraftAssignments(location.state?.draftAssignments ?? [])
     setSuggestKey(k => k + 1)
+    setViolations([])
   }, [roundId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveParticipantsTimer = useRef(null)
