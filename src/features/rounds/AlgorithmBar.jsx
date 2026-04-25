@@ -59,6 +59,12 @@ export default function AlgorithmBar({ options, onOptionChange, onSuggest, onCom
           onChange={e => onOptionChange('rotationPriority', e.target.checked)}
         />
 
+        <Checkbox
+          label="Avoid Blocks"
+          checked={!!options.honorBlocks}
+          onChange={e => onOptionChange('honorBlocks', e.target.checked)}
+        />
+
         {/* Mutually exclusive gender group */}
         <div className="flex items-center gap-2 flex-wrap bg-stone-100 border border-stone-300 rounded-lg px-2 py-1">
           {GENDER_OPTIONS.map(opt => (
