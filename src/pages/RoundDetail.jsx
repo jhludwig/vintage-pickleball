@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useRankings } from '../hooks/useRankings'
-import { suggest } from '../features/rounds/algorithms'
+import { suggest, resolveBlocks } from '../features/rounds/algorithms'
 import { fullName } from '../lib/playerName'
 import AlgorithmBar from '../features/rounds/AlgorithmBar'
 import ParticipantPanel from '../features/rounds/ParticipantPanel'
@@ -34,6 +34,8 @@ export default function RoundDetail() {
   const [priorRounds, setPriorRounds] = useState([])
   const [priorRoundResult, setPriorRoundResult] = useState(null)
   const [sittingOutCounts, setSittingOutCounts] = useState({})
+  const [allBlocks, setAllBlocks] = useState([])
+  const [violations, setViolations] = useState([])
 
   const load = useCallback(async () => {
     const [
@@ -45,6 +47,7 @@ export default function RoundDetail() {
       { data: assignments },
       { data: res },
       { data: priorRoundRows },
+      { data: blocksData },
     ] = await Promise.all([
       supabase.from('rounds').select('*').eq('id', roundId).single(),
       supabase.from('events').select('*').eq('id', eventId).single(),
@@ -54,6 +57,7 @@ export default function RoundDetail() {
       supabase.from('court_assignments').select('*, players(*)').eq('round_id', roundId),
       supabase.from('court_results').select('*').eq('round_id', roundId),
       supabase.from('rounds').select('id, round_number').eq('event_id', eventId).eq('is_committed', true).neq('id', roundId).order('round_number'),
+      supabase.from('player_blocks').select('player_id_a, player_id_b'),
     ])
 
     setRound(rd)
@@ -143,6 +147,7 @@ export default function RoundDetail() {
       setSittingOutCounts({})
     }
 
+    setAllBlocks(blocksData ?? [])
     setLoading(false)
   }, [roundId, eventId])
 
@@ -197,7 +202,22 @@ export default function RoundDetail() {
       [algorithmKey]: true,
     }
     const draft = suggest({ participants: participatingPlayers, activeCourts, options: mergedOptions, priorRounds, priorRoundResult, sittingOutCounts })
-    setDraftAssignments(draft)
+
+    if (options.honorBlocks && allBlocks.length > 0) {
+      const participantIds = new Set(participatingPlayers.map(p => p.id))
+      const blockPairs = new Set(
+        allBlocks
+          .filter(b => participantIds.has(b.player_id_a) && participantIds.has(b.player_id_b))
+          .map(b => `${b.player_id_a}|${b.player_id_b}`)
+      )
+      const { courts: resolved, violations: newViolations } = resolveBlocks(draft, blockPairs)
+      setDraftAssignments(resolved)
+      setViolations(newViolations)
+    } else {
+      setDraftAssignments(draft)
+      setViolations([])
+    }
+
     setSwapTarget(null)
     setSuggestKey(k => k + 1)
   }
@@ -245,6 +265,7 @@ export default function RoundDetail() {
     setFlashedIds(new Set([swapTarget.id, player.id]))
     setTimeout(() => setFlashedIds(new Set()), 700)
     setSwapTarget(null)
+    setViolations([])
   }
 
 
@@ -445,6 +466,7 @@ export default function RoundDetail() {
           suggestKey={suggestKey}
           flashedIds={flashedIds}
           swapTargetId={swapTarget?.id ?? null}
+          violations={options.honorBlocks ? violations : []}
         />
       </div>
 
