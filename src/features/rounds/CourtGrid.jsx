@@ -2,7 +2,7 @@ import CourtCard from './CourtCard'
 import { fullName } from '../../lib/playerName'
 import { useRankings } from '../../hooks/useRankings'
 
-export default function CourtGrid({ courts, draftAssignments, committedAssignments, results, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, holdingPen, suggestKey, flashedIds, swapTargetId }) {
+export default function CourtGrid({ courts, draftAssignments, committedAssignments, results, onToggleActive, onPlayerClick, onSetWinner, isCommitted, canWrite, holdingPen, suggestKey, flashedIds, swapTargetId, violations = [] }) {
   const { showRankings } = useRankings()
   return (
     <div className="flex-1 p-2 overflow-y-auto">
@@ -12,6 +12,7 @@ export default function CourtGrid({ courts, draftAssignments, committedAssignmen
           const assignments = isCommitted ? committedAssignments : draftAssignments
           const courtAssignments = assignments.find(a => a.court_number === court.court_number) ?? { team1: [], team2: [] }
           const result = results.find(r => r.court_number === court.court_number)
+          const courtViolations = violations.filter(v => v.courtNumber === court.court_number)
           return (
             <CourtCard
               key={court.court_number}
@@ -28,6 +29,7 @@ export default function CourtGrid({ courts, draftAssignments, committedAssignmen
               suggestKey={suggestKey}
               flashedIds={flashedIds}
               swapTargetId={swapTargetId}
+              violations={courtViolations}
             />
           )
         })}
