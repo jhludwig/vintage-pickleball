@@ -12,3 +12,4 @@ create policy "public read" on player_blocks for select using (true);
 create policy "auth insert" on player_blocks for insert with check (auth.uid() is not null);
 create policy "auth update" on player_blocks for update using (auth.uid() is not null);
 create policy "auth delete" on player_blocks for delete using (auth.uid() is not null);
+create index on player_blocks (player_id_b);
