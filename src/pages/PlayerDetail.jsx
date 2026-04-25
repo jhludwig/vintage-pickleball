@@ -45,8 +45,8 @@ export default function PlayerDetail() {
         { data: playerData, error: playerError },
         { data: participations, error: partError },
         { data: assignments, error: asnError },
-        { data: blocksData },
-        { data: playersData },
+        { data: blocksData, error: blocksError },
+        { data: playersData, error: playersError },
       ] = await Promise.all([
         supabase.from('players').select('*').eq('id', playerId).single(),
         supabase
@@ -71,6 +71,8 @@ export default function PlayerDetail() {
       if (playerError) console.error('Failed to load player:', playerError)
       if (partError) console.error('Failed to load participations:', partError)
       if (asnError) console.error('Failed to load assignments:', asnError)
+      if (blocksError) console.error('Failed to load block list:', blocksError)
+      if (playersError) console.error('Failed to load players:', playersError)
 
       const inSeason = date => date >= season.start && date <= season.end
 
@@ -215,16 +217,16 @@ export default function PlayerDetail() {
             )}
             {blockList.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-3">
-                {blockList.map(({ blockId, player }) => (
+                {blockList.map(({ blockId, player: blockedPlayer }) => (
                   <span
                     key={blockId}
                     className="inline-flex items-center gap-1 text-xs bg-red-50 border border-red-200 text-red-700 px-2 py-1 rounded-full"
                   >
-                    {fullName(player)}
+                    {fullName(blockedPlayer)}
                     <button
                       onClick={() => handleRemoveBlock(blockId)}
                       className="text-red-400 hover:text-red-600 font-bold leading-none"
-                      aria-label={`Remove block for ${fullName(player)}`}
+                      aria-label={`Remove block for ${fullName(blockedPlayer)}`}
                     >
                       ×
                     </button>
