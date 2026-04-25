@@ -333,3 +333,91 @@ function riverAssign(pool, activeCourts, priorRoundResult) {
     return { court_number: courtNum, team1, team2 }
   })
 }
+
+function findViolations(courts, blockPairs) {
+  const violations = []
+  for (const court of courts) {
+    const all = [...court.team1, ...court.team2]
+    for (let i = 0; i < all.length; i++) {
+      for (let j = i + 1; j < all.length; j++) {
+        const key = [all[i].id, all[j].id].sort().join('|')
+        if (blockPairs.has(key)) {
+          violations.push({ courtNumber: court.court_number, playerA: all[i], playerB: all[j] })
+        }
+      }
+    }
+  }
+  return violations
+}
+
+/**
+ * Greedy post-processing pass that tries to swap blocked players to different courts.
+ * Soft constraint: violations that cannot be resolved without creating new ones are left in place.
+ * @param {{ court_number: number, team1: object[], team2: object[] }[]} courts - output from suggest()
+ * @param {Set<string>} blockPairs - "id1|id2" strings where id1 < id2 (lexicographic)
+ * @returns {{ courts: object[], violations: { courtNumber: number, playerA: object, playerB: object }[] }}
+ */
+export function resolveBlocks(courts, blockPairs) {
+  if (!blockPairs || blockPairs.size === 0) return { courts, violations: [] }
+
+  function isBlocked(idA, idB) {
+    return blockPairs.has([idA, idB].sort().join('|'))
+  }
+
+  function hasConflict(group) {
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        if (isBlocked(group[i].id, group[j].id)) return true
+      }
+    }
+    return false
+  }
+
+  const result = courts.map(c => ({ ...c, team1: [...c.team1], team2: [...c.team2] }))
+
+  for (let si = 0; si < result.length; si++) {
+    let maxPasses = result.length * 4
+    while (maxPasses-- > 0) {
+      const sourcePlayers = [...result[si].team1, ...result[si].team2]
+
+      // Find first blocked player on this court
+      let offender = null
+      for (let pi = 0; pi < sourcePlayers.length && !offender; pi++) {
+        for (let qi = pi + 1; qi < sourcePlayers.length && !offender; qi++) {
+          if (isBlocked(sourcePlayers[pi].id, sourcePlayers[qi].id)) {
+            offender = sourcePlayers[pi]
+          }
+        }
+      }
+      if (!offender) break // no violations left on this court
+
+      // Try each player on every other court as a swap candidate
+      let swapped = false
+      for (let ti = 0; ti < result.length && !swapped; ti++) {
+        if (ti === si) continue
+        const targetPlayers = [...result[ti].team1, ...result[ti].team2]
+        for (let ci = 0; ci < targetPlayers.length && !swapped; ci++) {
+          const candidate = targetPlayers[ci]
+          const sourceAfter = sourcePlayers.map(p => p.id === offender.id ? candidate : p)
+          const targetAfter = targetPlayers.map(p => p.id === candidate.id ? offender : p)
+          if (!hasConflict(sourceAfter) && !hasConflict(targetAfter)) {
+            result[si] = {
+              ...result[si],
+              team1: result[si].team1.map(p => p.id === offender.id ? candidate : p),
+              team2: result[si].team2.map(p => p.id === offender.id ? candidate : p),
+            }
+            result[ti] = {
+              ...result[ti],
+              team1: result[ti].team1.map(p => p.id === candidate.id ? offender : p),
+              team2: result[ti].team2.map(p => p.id === candidate.id ? offender : p),
+            }
+            swapped = true
+          }
+        }
+      }
+      if (!swapped) break // no valid swap found — leave remaining violations on this court
+    }
+  }
+
+  return { courts: result, violations: findViolations(result, blockPairs) }
+}
